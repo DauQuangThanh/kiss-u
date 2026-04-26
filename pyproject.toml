@@ -72,11 +72,11 @@ exclude = [
 [project.optional-dependencies]
 test = [
     "pytest>=7.0",
-    "pytest-cov>=4.0",
+    "pytest-cov>=7.1.0",
 ]
 dev = [
     "pytest>=7.0",
-    "pytest-cov>=4.0",
+    "pytest-cov>=7.1.0",
     "skills-ref>=0.1.1",
 ]
 
