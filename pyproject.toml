@@ -10,7 +10,7 @@ dependencies = [
     "platformdirs",
     "readchar",
     "pyyaml>=6.0",
-    "packaging>=26.1",
+    "packaging>=26.2",
     "pathspec>=1.1.0",
     "json5>=0.14.0",
 ]
