@@ -617,7 +617,6 @@ def integration_upgrade(
 
     # Verify asset integrity before reading the bundle
     from kiss_cli._integrity import verify_asset_integrity, AssetCorruptionError
-    from kiss_cli.installer import _locate_core_pack
     core_pack = _locate_core_pack()
     if core_pack:
         try:

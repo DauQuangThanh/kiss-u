@@ -21,6 +21,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    import subprocess
+
     from .manifest import IntegrationManifest
 
 
@@ -52,14 +54,12 @@ class IntegrationOption:
 # Frontmatter helpers for subagent transformation
 # ---------------------------------------------------------------------------
 
-import re as _re
-
-_FRONTMATTER_RE = _re.compile(r"\A(---\r?\n)(.*?)(\r?\n---\r?\n)", _re.DOTALL)
+_FRONTMATTER_RE = re.compile(r"\A(---\r?\n)(.*?)(\r?\n---\r?\n)", re.DOTALL)
 
 
 def _strip_frontmatter_field(content: str, field: str) -> str:
     """Remove a single YAML frontmatter field line from *content*."""
-    pattern = _re.compile(rf"(?m)^[ \t]*{_re.escape(field)}:[ \t]*[^\r\n]*\r?\n?")
+    pattern = re.compile(rf"(?m)^[ \t]*{re.escape(field)}:[ \t]*[^\r\n]*\r?\n?")
     match = _FRONTMATTER_RE.match(content)
     if not match:
         return content
@@ -526,7 +526,6 @@ class IntegrationBase(ABC):
         Uses string/regex manipulation to preserve comments and formatting
         in existing frontmatter.
         """
-        import re as _re
 
         leading_ws = len(content) - len(content.lstrip())
         leading = content[:leading_ws]
@@ -536,10 +535,10 @@ class IntegrationBase(ABC):
             return "---\nalwaysApply: true\n---\n\n" + content
 
         # Match frontmatter block: ---\n...\n---
-        match = _re.match(
+        match = re.match(
             r"^(---[ \t]*\r?\n)(.*?)(\r?\n---[ \t]*)(\r?\n|$)(.*)",
             stripped,
-            _re.DOTALL,
+            re.DOTALL,
         )
         if not match:
             return "---\nalwaysApply: true\n---\n\n" + content
@@ -548,15 +547,15 @@ class IntegrationBase(ABC):
         newline = "\r\n" if "\r\n" in opening else "\n"
 
         # Already correct?
-        if _re.search(
+        if re.search(
             r"(?m)^[ \t]*alwaysApply[ \t]*:[ \t]*true[ \t]*(?:#.*)?$", fm_text
         ):
             return content
 
         # alwaysApply exists but wrong value — fix in place while preserving
         # indentation and any trailing inline comment.
-        if _re.search(r"(?m)^[ \t]*alwaysApply[ \t]*:", fm_text):
-            fm_text = _re.sub(
+        if re.search(r"(?m)^[ \t]*alwaysApply[ \t]*:", fm_text):
+            fm_text = re.sub(
                 r"(?m)^([ \t]*)alwaysApply[ \t]*:.*?([ \t]*(?:#.*)?)$",
                 r"\1alwaysApply: true\2",
                 fm_text,
