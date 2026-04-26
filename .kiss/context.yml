@@ -1,0 +1,112 @@
+# kiss context file — project-level state for Spec-Driven Development (SDD).
+# AI agents and kiss commands read this file to understand the project layout
+# and track what is currently being worked on.
+# Edit any value below to match your project's conventions.
+
+# Version of this schema. Do not change unless you are migrating to a newer
+# version of kiss that requires a different schema.
+schema_version: "1.0"
+
+# ---------------------------------------------------------------------------
+# paths — where SDD artifacts live, relative to the project root.
+# Change these if you keep docs, specs, or scripts in non-default locations.
+# ---------------------------------------------------------------------------
+paths:
+  # Root documentation directory. General docs and top-level indexes go here.
+  docs: docs
+
+  # Specification files (.md). Each feature should have its own spec here.
+  specs: docs/specs
+
+  # Plan files (.md). Detailed implementation plans derived from specs.
+  plans: docs/plans
+
+  # Task files (.md). Granular tasks broken down from plans.
+  tasks: docs/tasks
+
+  # Prompt / template files shipped alongside each installed skill
+  # (each skill folder has its own ``templates/`` subdirectory). Paths
+  # are resolved from the active skill's folder at runtime.
+  templates: templates
+
+  # Helper scripts shipped alongside each installed skill (each skill
+  # folder has its own ``scripts/bash/`` and ``scripts/powershell/``
+  # subdirectories). Paths are resolved from the active skill's folder.
+  scripts: scripts
+
+# ---------------------------------------------------------------------------
+# current — the active "work item" for this session.
+# kiss commands and AI agents use these values to resume context automatically.
+# Set a field to null (or leave blank) when nothing is active.
+# ---------------------------------------------------------------------------
+current:
+  # Human-readable name of the feature currently being developed.
+  # Example: "user-authentication"
+  feature: narrow-to-seven-ais
+
+  # Path (relative to project root) of the active spec file.
+  # Example: docs/specs/user-authentication.md
+  spec: specs/004-narrow-to-seven-ais/spec.md
+
+  # Path (relative to project root) of the active plan file.
+  # Example: docs/plans/user-authentication.md
+  plan: specs/004-narrow-to-seven-ais/plan.md
+
+  # Path (relative to project root) of the active tasks list file.
+  # Example: docs/tasks/user-authentication/tasks.md
+  tasks: docs/tasks/narrow-to-seven-ais/tasks.md
+
+  # Path (relative to project root) of the active checklist file.
+  # Example: docs/tasks/user-authentication/checklist.md
+  checklist: null
+
+  # Git branch currently being used for this feature.
+  # Example: feature/user-authentication
+  branch: null
+
+# ---------------------------------------------------------------------------
+# preferences — controls how kiss commands behave.
+# ---------------------------------------------------------------------------
+preferences:
+  # Format used when kiss writes new documents.
+  # Supported values: "markdown"
+  output_format: markdown
+
+  # How tasks are numbered inside a plan.
+  # "sequential" — 1, 2, 3 …
+  # "timestamp"  — tasks prefixed with a date/time stamp
+  task_numbering: sequential
+
+  # When true, kiss will ask for confirmation before writing any file.
+  # Set to false for a fully automated / CI workflow.
+  confirm_before_write: true
+
+  # When true, kiss automatically updates the "current" section above
+  # whenever you run commands that change the active spec, plan, or task.
+  auto_update_context: true
+
+# ---------------------------------------------------------------------------
+# language — natural-language preferences for what kiss writes and asks.
+# Free-form strings (e.g. "English", "Spanish", "Vietnamese", "fr-CA").
+# AI agents and skills should honour these settings: produce artefacts in
+# `output` and conduct interactive Q&A in `interaction`. Defaults to
+# English for both. Set them independently when the user reads / writes in
+# different languages.
+# ---------------------------------------------------------------------------
+language:
+  # Language used when kiss writes documents — specs, plans, tasks,
+  # designs, ADRs, reviews, status reports, and any other artefact.
+  output: English
+
+  # Language used when kiss asks questions, presents options, and
+  # confirms decisions with the user.
+  interaction: English
+
+# ---------------------------------------------------------------------------
+# integrations — AI providers that were installed into this project.
+# kiss uses this list to apply provider-specific prompts and settings.
+# Add or remove entries to match the AI tools your team actually uses.
+# Run `kiss install` to interactively manage integrations.
+# ---------------------------------------------------------------------------
+integrations:
+  - claude

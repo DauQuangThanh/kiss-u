@@ -1,0 +1,2098 @@
+"""
+Preset Manager for kiss
+
+Handles installation, removal, and management of kiss presets.
+Presets are self-contained, versioned collections of templates
+(artifact, command, and script templates) that can be installed to
+customize the Spec-Driven Development workflow.
+"""
+
+import copy
+import json
+import hashlib
+import os
+import tempfile
+import zipfile
+import shutil
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING, Optional, Dict, List, Any
+
+if TYPE_CHECKING:
+    from .agents import CommandRegistrar
+from datetime import datetime, timezone
+import re
+
+import yaml
+from packaging import version as pkg_version
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
+
+from .extensions import ExtensionRegistry, normalize_priority
+
+
+def _substitute_core_template(
+    body: str,
+    cmd_name: str,
+    project_root: "Path",
+    registrar: "CommandRegistrar",
+) -> "tuple[str, dict]":
+    """Substitute {CORE_TEMPLATE} with the body of the installed core command template.
+
+    Args:
+        body: Preset command body (may contain {CORE_TEMPLATE} placeholder).
+        cmd_name: Full command name (e.g. "kiss.git.feature" or "kiss.specify").
+        project_root: Project root path.
+        registrar: CommandRegistrar instance for parse_frontmatter.
+
+    Returns:
+        A tuple of (body, core_frontmatter) where body has {CORE_TEMPLATE} replaced
+        by the core template body and core_frontmatter holds the core template's parsed
+        frontmatter (so callers can inherit scripts/agent_scripts from it).  Both are
+        unchanged / empty when the placeholder is absent or the core template file does
+        not exist.
+    """
+    if "{CORE_TEMPLATE}" not in body:
+        return body, {}
+
+    # Derive the short name (strip "kiss." prefix) used by core command templates.
+    short_name = cmd_name
+    if short_name.startswith("kiss."):
+        short_name = short_name[len("kiss."):]
+
+    resolver = PresetResolver(project_root)
+    # Resolution order for the core template:
+    # 1. resolve_core(cmd_name) — covers tier-1 project overrides and tier-3/4
+    #    name-based lookup (file named <cmd_name>.md).  Checked first so that a
+    #    local override always wins, even for extension commands.
+    # 2. resolve_extension_command_via_manifest(cmd_name) — manifest-based tier-3
+    #    fallback for extension commands whose file is named differently from the
+    #    command name (e.g. kiss.selftest.extension → commands/selftest.md).
+    # 3. resolve_core(short_name) — core template fallback using the unprefixed
+    #    name (e.g. specify → templates/commands/specify.md).
+    # resolve_core() skips installed presets (tier 2) to prevent accidental nesting
+    # where another preset's wrap output is mistaken for the real core.
+    core_file = (
+        resolver.resolve_core(cmd_name, "command")
+        or resolver.resolve_extension_command_via_manifest(cmd_name)
+        or resolver.resolve_core(short_name, "command")
+    )
+    if core_file is None:
+        return body, {}
+
+    core_frontmatter, core_body = registrar.parse_frontmatter(core_file.read_text(encoding="utf-8"))
+    return body.replace("{CORE_TEMPLATE}", core_body), core_frontmatter
+
+
+@dataclass
+class PresetCatalogEntry:
+    """Represents a single entry in the preset catalog stack."""
+    url: str
+    name: str
+    priority: int
+    install_allowed: bool
+    description: str = ""
+
+
+class PresetError(Exception):
+    """Base exception for preset-related errors."""
+    pass
+
+
+class PresetValidationError(PresetError):
+    """Raised when preset manifest validation fails."""
+    pass
+
+
+class PresetCompatibilityError(PresetError):
+    """Raised when preset is incompatible with current environment."""
+    pass
+
+
+VALID_PRESET_TEMPLATE_TYPES = {"template", "command", "script"}
+
+
+class PresetManifest:
+    """Represents and validates a preset manifest (preset.yml)."""
+
+    SCHEMA_VERSION = "1.0"
+    REQUIRED_FIELDS = ["schema_version", "preset", "requires", "provides"]
+
+    def __init__(self, manifest_path: Path):
+        """Load and validate preset manifest.
+
+        Args:
+            manifest_path: Path to preset.yml file
+
+        Raises:
+            PresetValidationError: If manifest is invalid
+        """
+        self.path = manifest_path
+        self.data = self._load_yaml(manifest_path)
+        self._validate()
+
+    def _load_yaml(self, path: Path) -> dict:
+        """Load YAML file safely."""
+        try:
+            with open(path, 'r', encoding="utf-8") as f:
+                return yaml.safe_load(f) or {}
+        except yaml.YAMLError as e:
+            raise PresetValidationError(f"Invalid YAML in {path}: {e}")
+        except FileNotFoundError:
+            raise PresetValidationError(f"Manifest not found: {path}")
+
+    def _validate(self):
+        """Validate manifest structure and required fields."""
+        # Check required top-level fields
+        for field in self.REQUIRED_FIELDS:
+            if field not in self.data:
+                raise PresetValidationError(f"Missing required field: {field}")
+
+        # Validate schema version
+        if self.data["schema_version"] != self.SCHEMA_VERSION:
+            raise PresetValidationError(
+                f"Unsupported schema version: {self.data['schema_version']} "
+                f"(expected {self.SCHEMA_VERSION})"
+            )
+
+        # Validate preset metadata
+        pack = self.data["preset"]
+        for field in ["id", "name", "version", "description"]:
+            if field not in pack:
+                raise PresetValidationError(f"Missing preset.{field}")
+
+        # Validate pack ID format
+        if not re.match(r'^[a-z0-9-]+$', pack["id"]):
+            raise PresetValidationError(
+                f"Invalid preset ID '{pack['id']}': "
+                "must be lowercase alphanumeric with hyphens only"
+            )
+
+        # Validate semantic version
+        try:
+            pkg_version.Version(pack["version"])
+        except pkg_version.InvalidVersion:
+            raise PresetValidationError(f"Invalid version: {pack['version']}")
+
+        # Validate requires section
+        requires = self.data["requires"]
+        if "kiss_version" not in requires:
+            raise PresetValidationError("Missing requires.kiss_version")
+
+        # Validate provides section
+        provides = self.data["provides"]
+        if "templates" not in provides or not provides["templates"]:
+            raise PresetValidationError(
+                "Preset must provide at least one template"
+            )
+
+        # Validate templates
+        for tmpl in provides["templates"]:
+            if "type" not in tmpl or "name" not in tmpl or "file" not in tmpl:
+                raise PresetValidationError(
+                    "Template missing 'type', 'name', or 'file'"
+                )
+
+            if tmpl["type"] not in VALID_PRESET_TEMPLATE_TYPES:
+                raise PresetValidationError(
+                    f"Invalid template type '{tmpl['type']}': "
+                    f"must be one of {sorted(VALID_PRESET_TEMPLATE_TYPES)}"
+                )
+
+            # Validate file path safety: must be relative, no parent traversal
+            file_path = tmpl["file"]
+            normalized = os.path.normpath(file_path)
+            if os.path.isabs(normalized) or normalized.startswith(".."):
+                raise PresetValidationError(
+                    f"Invalid template file path '{file_path}': "
+                    "must be a relative path within the preset directory"
+                )
+
+            # Validate template name format
+            if tmpl["type"] == "command":
+                # Commands use dot notation (e.g. kiss.specify)
+                if not re.match(r'^[a-z0-9.-]+$', tmpl["name"]):
+                    raise PresetValidationError(
+                        f"Invalid command name '{tmpl['name']}': "
+                        "must be lowercase alphanumeric with hyphens and dots only"
+                    )
+            else:
+                if not re.match(r'^[a-z0-9-]+$', tmpl["name"]):
+                    raise PresetValidationError(
+                        f"Invalid template name '{tmpl['name']}': "
+                        "must be lowercase alphanumeric with hyphens only"
+                    )
+
+    @property
+    def id(self) -> str:
+        """Get preset ID."""
+        return self.data["preset"]["id"]
+
+    @property
+    def name(self) -> str:
+        """Get preset name."""
+        return self.data["preset"]["name"]
+
+    @property
+    def version(self) -> str:
+        """Get preset version."""
+        return self.data["preset"]["version"]
+
+    @property
+    def description(self) -> str:
+        """Get preset description."""
+        return self.data["preset"]["description"]
+
+    @property
+    def author(self) -> str:
+        """Get preset author."""
+        return self.data["preset"].get("author", "")
+
+    @property
+    def requires_kiss_version(self) -> str:
+        """Get required kiss version range."""
+        return self.data["requires"]["kiss_version"]
+
+    @property
+    def templates(self) -> List[Dict[str, Any]]:
+        """Get list of provided templates."""
+        return self.data["provides"]["templates"]
+
+    @property
+    def tags(self) -> List[str]:
+        """Get preset tags."""
+        return self.data.get("tags", [])
+
+    def get_hash(self) -> str:
+        """Calculate SHA256 hash of manifest file."""
+        with open(self.path, 'rb') as f:
+            return f"sha256:{hashlib.sha256(f.read()).hexdigest()}"
+
+
+class PresetRegistry:
+    """Manages the registry of installed presets."""
+
+    REGISTRY_FILE = ".registry"
+    SCHEMA_VERSION = "1.0"
+
+    def __init__(self, packs_dir: Path):
+        """Initialize registry.
+
+        Args:
+            packs_dir: Path to .kiss/presets/ directory
+        """
+        self.packs_dir = packs_dir
+        self.registry_path = packs_dir / self.REGISTRY_FILE
+        self.data = self._load()
+
+    def _load(self) -> dict:
+        """Load registry from disk."""
+        if not self.registry_path.exists():
+            return {
+                "schema_version": self.SCHEMA_VERSION,
+                "presets": {}
+            }
+
+        try:
+            with open(self.registry_path, 'r', encoding="utf-8") as f:
+                data = json.load(f)
+            # Validate loaded data is a dict (handles corrupted registry files)
+            if not isinstance(data, dict):
+                return {
+                    "schema_version": self.SCHEMA_VERSION,
+                    "presets": {}
+                }
+            # Normalize presets field (handles corrupted presets value)
+            if not isinstance(data.get("presets"), dict):
+                data["presets"] = {}
+            return data
+        except (json.JSONDecodeError, FileNotFoundError):
+            return {
+                "schema_version": self.SCHEMA_VERSION,
+                "presets": {}
+            }
+
+    def _save(self):
+        """Save registry to disk."""
+        self.packs_dir.mkdir(parents=True, exist_ok=True)
+        with open(self.registry_path, 'w', encoding="utf-8") as f:
+            json.dump(self.data, f, indent=2)
+
+    def add(self, pack_id: str, metadata: dict):
+        """Add preset to registry.
+
+        Args:
+            pack_id: Preset ID
+            metadata: Pack metadata (version, source, etc.)
+        """
+        self.data["presets"][pack_id] = {
+            **copy.deepcopy(metadata),
+            "installed_at": datetime.now(timezone.utc).isoformat()
+        }
+        self._save()
+
+    def remove(self, pack_id: str):
+        """Remove preset from registry.
+
+        Args:
+            pack_id: Preset ID
+        """
+        packs = self.data.get("presets")
+        if not isinstance(packs, dict):
+            return
+        if pack_id in packs:
+            del packs[pack_id]
+            self._save()
+
+    def update(self, pack_id: str, updates: dict):
+        """Update preset metadata in registry.
+
+        Merges the provided updates with the existing entry, preserving any
+        fields not specified. The installed_at timestamp is always preserved
+        from the original entry.
+
+        Args:
+            pack_id: Preset ID
+            updates: Partial metadata to merge into existing metadata
+
+        Raises:
+            KeyError: If preset is not installed
+        """
+        packs = self.data.get("presets")
+        if not isinstance(packs, dict) or pack_id not in packs:
+            raise KeyError(f"Preset '{pack_id}' not found in registry")
+        existing = packs[pack_id]
+        # Handle corrupted registry entries (e.g., string/list instead of dict)
+        if not isinstance(existing, dict):
+            existing = {}
+        # Merge: existing fields preserved, new fields override (deep copy to prevent caller mutation)
+        merged = {**existing, **copy.deepcopy(updates)}
+        # Always preserve original installed_at based on key existence, not truthiness,
+        # to handle cases where the field exists but may be falsy (defensive default)
+        if "installed_at" in existing:
+            merged["installed_at"] = existing["installed_at"]
+        else:
+            # If not present in existing, explicitly remove from merged if caller provided it
+            merged.pop("installed_at", None)
+        packs[pack_id] = merged
+        self._save()
+
+    def restore(self, pack_id: str, metadata: dict):
+        """Restore preset metadata to registry without modifying timestamps.
+
+        Use this method for rollback scenarios where you have a complete backup
+        of the registry entry (including installed_at) and want to restore it
+        exactly as it was.
+
+        Args:
+            pack_id: Preset ID
+            metadata: Complete preset metadata including installed_at
+
+        Raises:
+            ValueError: If metadata is None or not a dict
+        """
+        if metadata is None or not isinstance(metadata, dict):
+            raise ValueError(f"Cannot restore '{pack_id}': metadata must be a dict")
+        # Ensure presets dict exists (handle corrupted registry)
+        if not isinstance(self.data.get("presets"), dict):
+            self.data["presets"] = {}
+        self.data["presets"][pack_id] = copy.deepcopy(metadata)
+        self._save()
+
+    def get(self, pack_id: str) -> Optional[dict]:
+        """Get preset metadata from registry.
+
+        Returns a deep copy to prevent callers from accidentally mutating
+        nested internal registry state without going through the write path.
+
+        Args:
+            pack_id: Preset ID
+
+        Returns:
+            Deep copy of preset metadata, or None if not found or corrupted
+        """
+        packs = self.data.get("presets")
+        if not isinstance(packs, dict):
+            return None
+        entry = packs.get(pack_id)
+        # Return None for missing or corrupted (non-dict) entries
+        if entry is None or not isinstance(entry, dict):
+            return None
+        return copy.deepcopy(entry)
+
+    def list(self) -> Dict[str, dict]:
+        """Get all installed presets with valid metadata.
+
+        Returns a deep copy of presets with dict metadata only.
+        Corrupted entries (non-dict values) are filtered out.
+
+        Returns:
+            Dictionary of pack_id -> metadata (deep copies), empty dict if corrupted
+        """
+        packs = self.data.get("presets", {}) or {}
+        if not isinstance(packs, dict):
+            return {}
+        # Filter to only valid dict entries to match type contract
+        return {
+            pack_id: copy.deepcopy(meta)
+            for pack_id, meta in packs.items()
+            if isinstance(meta, dict)
+        }
+
+    def keys(self) -> set:
+        """Get all preset IDs including corrupted entries.
+
+        Lightweight method that returns IDs without deep-copying metadata.
+        Use this when you only need to check which presets are tracked.
+
+        Returns:
+            Set of preset IDs (includes corrupted entries)
+        """
+        packs = self.data.get("presets", {}) or {}
+        if not isinstance(packs, dict):
+            return set()
+        return set(packs.keys())
+
+    def list_by_priority(self, include_disabled: bool = False) -> List[tuple]:
+        """Get all installed presets sorted by priority.
+
+        Lower priority number = higher precedence (checked first).
+        Presets with equal priority are sorted alphabetically by ID
+        for deterministic ordering.
+
+        Args:
+            include_disabled: If True, include disabled presets. Default False.
+
+        Returns:
+            List of (pack_id, metadata_copy) tuples sorted by priority.
+            Metadata is deep-copied to prevent accidental mutation.
+        """
+        packs = self.data.get("presets", {}) or {}
+        if not isinstance(packs, dict):
+            packs = {}
+        sortable_packs = []
+        for pack_id, meta in packs.items():
+            if not isinstance(meta, dict):
+                continue
+            # Skip disabled presets unless explicitly requested
+            if not include_disabled and not meta.get("enabled", True):
+                continue
+            metadata_copy = copy.deepcopy(meta)
+            metadata_copy["priority"] = normalize_priority(metadata_copy.get("priority", 10))
+            sortable_packs.append((pack_id, metadata_copy))
+        return sorted(
+            sortable_packs,
+            key=lambda item: (item[1]["priority"], item[0]),
+        )
+
+    def is_installed(self, pack_id: str) -> bool:
+        """Check if preset is installed.
+
+        Args:
+            pack_id: Preset ID
+
+        Returns:
+            True if pack is installed, False if not or registry corrupted
+        """
+        packs = self.data.get("presets")
+        if not isinstance(packs, dict):
+            return False
+        return pack_id in packs
+
+
+class PresetManager:
+    """Manages preset lifecycle: installation, removal, updates."""
+
+    def __init__(self, project_root: Path):
+        """Initialize preset manager.
+
+        Args:
+            project_root: Path to project root directory
+        """
+        self.project_root = project_root
+        self.presets_dir = project_root / ".kiss" / "presets"
+        self.registry = PresetRegistry(self.presets_dir)
+
+    def check_compatibility(
+        self,
+        manifest: PresetManifest,
+        kiss_version: str
+    ) -> bool:
+        """Check if preset is compatible with current kiss version.
+
+        Args:
+            manifest: Preset manifest
+            kiss_version: Current kiss version
+
+        Returns:
+            True if compatible
+
+        Raises:
+            PresetCompatibilityError: If pack is incompatible
+        """
+        required = manifest.requires_kiss_version
+        current = pkg_version.Version(kiss_version)
+
+        try:
+            specifier = SpecifierSet(required)
+            if current not in specifier:
+                raise PresetCompatibilityError(
+                    f"Preset requires kiss {required}, "
+                    f"but {kiss_version} is installed.\n"
+                    f"Upgrade kiss with: uv tool install kiss --force"
+                )
+        except InvalidSpecifier:
+            raise PresetCompatibilityError(
+                f"Invalid version specifier: {required}"
+            )
+
+        return True
+
+    def _register_commands(
+        self,
+        manifest: PresetManifest,
+        preset_dir: Path
+    ) -> Dict[str, List[str]]:
+        """Register preset command overrides with all detected AI agents.
+
+        Scans the preset's templates for type "command", reads each command
+        file, and writes it to every detected agent directory using the
+        CommandRegistrar from the agents module.
+
+        Args:
+            manifest: Preset manifest
+            preset_dir: Installed preset directory
+
+        Returns:
+            Dictionary mapping agent names to lists of registered command names
+        """
+        command_templates = [
+            t for t in manifest.templates if t.get("type") == "command"
+        ]
+        if not command_templates:
+            return {}
+
+        # Filter out extension command overrides if the extension isn't installed.
+        # Command names follow the pattern: kiss.<ext-id>.<cmd-name>
+        # Core commands (e.g. kiss.specify) have only one dot — always register.
+        extensions_dir = self.project_root / ".kiss" / "extensions"
+        filtered = []
+        for cmd in command_templates:
+            parts = cmd["name"].split(".")
+            if len(parts) >= 3 and parts[0] == "kiss":
+                ext_id = parts[1]
+                if not (extensions_dir / ext_id).is_dir():
+                    continue
+            filtered.append(cmd)
+
+        if not filtered:
+            return {}
+
+        try:
+            from .agents import CommandRegistrar
+        except ImportError:
+            return {}
+
+        registrar = CommandRegistrar()
+        return registrar.register_commands_for_all_agents(
+            filtered, manifest.id, preset_dir, self.project_root
+        )
+
+    def _unregister_commands(self, registered_commands: Dict[str, List[str]]) -> None:
+        """Remove previously registered command files from agent directories.
+
+        Args:
+            registered_commands: Dict mapping agent names to command name lists
+        """
+        try:
+            from .agents import CommandRegistrar
+        except ImportError:
+            return
+
+        registrar = CommandRegistrar()
+        registrar.unregister_commands(registered_commands, self.project_root)
+
+    def _replay_wraps_for_command(self, cmd_name: str) -> None:
+        """Recompose and rewrite agent files for a wrap-strategy command.
+
+        Collects all installed presets that declare cmd_name in their
+        wrap_commands registry field, sorts them so the highest-precedence
+        preset (lowest priority number) wraps outermost, then writes the
+        fully composed output to every agent directory.
+
+        Called after every install and remove to keep agent files correct
+        regardless of installation order.
+
+        Args:
+            cmd_name: Full command name (e.g. "kiss.specify")
+        """
+        try:
+            from .agents import CommandRegistrar
+        except ImportError:
+            return
+
+        # Collect enabled presets that wrap this command, sorted ascending
+        # (lowest priority number = highest precedence = outermost).
+        wrap_presets = []
+        for pack_id, metadata in self.registry.list_by_priority(include_disabled=False):
+            if cmd_name not in metadata.get("wrap_commands", []):
+                continue
+            pack_dir = self.presets_dir / pack_id
+            if not pack_dir.is_dir():
+                continue  # corrupted state — skip
+            wrap_presets.append((pack_id, pack_dir))
+
+        if not wrap_presets:
+            return
+
+        # Derive short name for core resolution fallback.
+        short_name = cmd_name
+        if short_name.startswith("kiss."):
+            short_name = short_name[len("kiss."):]
+
+        resolver = PresetResolver(self.project_root)
+        core_file = (
+            resolver.resolve_core(cmd_name, "command")
+            or resolver.resolve_extension_command_via_manifest(cmd_name)
+            or (
+                resolver.resolve_extension_command_via_manifest(short_name)
+                if short_name != cmd_name
+                else None
+            )
+            or resolver.resolve_core(short_name, "command")
+        )
+        if core_file is None:
+            return
+
+        registrar = CommandRegistrar()
+        core_frontmatter, core_body = registrar.parse_frontmatter(
+            core_file.read_text(encoding="utf-8")
+        )
+        replay_aliases: List[str] = []
+        seen_aliases: set[str] = set()
+
+        # Apply wraps innermost-first (reverse of ascending list).
+        accumulated_body = core_body
+        outermost_frontmatter = {}
+        outermost_pack_id = wrap_presets[0][0]  # fallback; updated per contributing preset
+        for pack_id, pack_dir in reversed(wrap_presets):
+            manifest_path = pack_dir / "preset.yml"
+            cmd_file: Optional[Path] = None
+            if manifest_path.exists():
+                try:
+                    manifest = PresetManifest(manifest_path)
+                except (PresetValidationError, KeyError, TypeError, ValueError):
+                    manifest = None
+                if manifest is not None:
+                    for template in manifest.templates:
+                        if template.get("type") != "command" or template.get("name") != cmd_name:
+                            continue
+                        file_rel = template.get("file")
+                        if isinstance(file_rel, str):
+                            rel_path = Path(file_rel)
+                            if not rel_path.is_absolute():
+                                try:
+                                    preset_root = pack_dir.resolve()
+                                    candidate = (preset_root / rel_path).resolve()
+                                    candidate.relative_to(preset_root)
+                                except (OSError, ValueError):
+                                    candidate = None
+                                if candidate is not None:
+                                    cmd_file = candidate
+                        aliases = template.get("aliases", [])
+                        if not isinstance(aliases, list):
+                            aliases = []
+                        for alias in aliases:
+                            if isinstance(alias, str) and alias not in seen_aliases:
+                                replay_aliases.append(alias)
+                                seen_aliases.add(alias)
+                        break
+            if cmd_file is None:
+                cmd_file = pack_dir / "commands" / f"{cmd_name}.md"
+            if not cmd_file.exists():
+                continue
+            wrap_fm, wrap_body = registrar.parse_frontmatter(
+                cmd_file.read_text(encoding="utf-8")
+            )
+            accumulated_body = wrap_body.replace("{CORE_TEMPLATE}", accumulated_body)
+            outermost_frontmatter = wrap_fm  # last iteration = outermost preset
+            outermost_pack_id = pack_id
+
+        # Build final frontmatter: outermost preset wins; fall back to core for
+        # scripts/agent_scripts if the outermost preset does not define them.
+        final_frontmatter = dict(outermost_frontmatter)
+        final_frontmatter.pop("strategy", None)
+        for key in ("scripts", "agent_scripts"):
+            if key not in final_frontmatter and key in core_frontmatter:
+                final_frontmatter[key] = core_frontmatter[key]
+
+        composed_content = (
+            registrar.render_frontmatter(final_frontmatter) + "\n" + accumulated_body
+        )
+
+        self._replay_skill_override(cmd_name, composed_content, outermost_pack_id)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            cmd_dir = tmp_path / "commands"
+            cmd_dir.mkdir()
+            (cmd_dir / f"{cmd_name}.md").write_text(composed_content, encoding="utf-8")
+            registrar._ensure_configs()
+            for agent_name, agent_config in registrar.AGENT_CONFIGS.items():
+                if agent_config.get("extension") == "/SKILL.md":
+                    continue
+                agent_dir = self.project_root / agent_config["dir"]
+                if not agent_dir.exists():
+                    continue
+                try:
+                    registrar.register_commands(
+                        agent_name,
+                        [{
+                            "name": cmd_name,
+                            "file": f"commands/{cmd_name}.md",
+                            "aliases": replay_aliases,
+                        }],
+                        f"preset:{outermost_pack_id}",
+                        tmp_path,
+                        self.project_root,
+                    )
+                except ValueError:
+                    continue
+
+    def _replay_skill_override(
+        self,
+        cmd_name: str,
+        composed_content: str,
+        outermost_pack_id: str,
+    ) -> None:
+        """Rewrite any active SKILL.md override for a replayed wrap command."""
+        skills_dir = self._get_skills_dir()
+        if not skills_dir:
+            return
+
+        from . import SKILL_DESCRIPTIONS
+        from .config import load_init_options
+        from .agents import CommandRegistrar
+        from .integrations import get_integration
+
+        init_opts = load_init_options(self.project_root)
+        if not isinstance(init_opts, dict):
+            init_opts = {}
+        selected_ai = init_opts.get("integration")
+        if not isinstance(selected_ai, str):
+            return
+
+        registrar = CommandRegistrar()
+        integration = get_integration(selected_ai)
+        agent_config = registrar.AGENT_CONFIGS.get(selected_ai, {})
+        create_missing_skills = bool(init_opts.get("ai_skills")) and agent_config.get("extension") != "/SKILL.md"
+
+        raw_short_name = cmd_name
+        if raw_short_name.startswith("kiss."):
+            raw_short_name = raw_short_name[len("kiss."):]
+        skill_name = f"kiss-{raw_short_name.replace('.', '-')}"
+        target_skill_names: List[str] = []
+        if (skills_dir / skill_name).is_dir():
+            target_skill_names.append(skill_name)
+        if not target_skill_names and create_missing_skills:
+            missing_skill_dir = skills_dir / skill_name
+            if not missing_skill_dir.exists():
+                target_skill_names.append(skill_name)
+        if not target_skill_names:
+            return
+
+        raw_short_name = cmd_name
+        if raw_short_name.startswith("kiss."):
+            raw_short_name = raw_short_name[len("kiss."):]
+        short_name = raw_short_name.replace(".", "-")
+        skill_title = self._skill_title_from_command(cmd_name)
+
+        frontmatter, body = registrar.parse_frontmatter(composed_content)
+        original_desc = frontmatter.get("description", "")
+        enhanced_desc = SKILL_DESCRIPTIONS.get(
+            short_name,
+            original_desc or f"Spec-kit workflow command: {short_name}",
+        )
+        body = registrar.resolve_skill_placeholders(
+            selected_ai, dict(frontmatter), body, self.project_root
+        )
+
+        for target_skill_name in target_skill_names:
+            skills_subdir = skills_dir / target_skill_name
+            if skills_subdir.exists() and not skills_subdir.is_dir():
+                continue
+            skills_subdir.mkdir(parents=True, exist_ok=True)
+            frontmatter_data = registrar.build_skill_frontmatter(
+                selected_ai,
+                target_skill_name,
+                enhanced_desc,
+                f"preset:{outermost_pack_id}",
+            )
+            frontmatter_text = yaml.safe_dump(frontmatter_data, sort_keys=False).strip()
+            skill_content = (
+                f"---\n"
+                f"{frontmatter_text}\n"
+                f"---\n\n"
+                f"# Speckit {skill_title} Skill\n\n"
+                f"{body}\n"
+            )
+            if integration is not None and hasattr(integration, "post_process_skill_content"):
+                skill_content = integration.post_process_skill_content(skill_content)
+            (skills_subdir / "SKILL.md").write_text(skill_content, encoding="utf-8")
+
+    def _get_skills_dir(self) -> Optional[Path]:
+        """Return the active skills directory for preset skill overrides.
+
+        Reads ``.kiss/init-options.json`` to determine whether skills
+        are enabled and which agent was selected, then delegates to
+        the module-level ``_get_skills_dir()`` helper for the concrete path.
+
+        Returns:
+            The skills directory ``Path``, or ``None`` if skills were not
+            enabled.
+        """
+        from .config import load_init_options
+        from .installer import _get_skills_dir
+
+        opts = load_init_options(self.project_root)
+        if not isinstance(opts, dict):
+            opts = {}
+        agent = opts.get("integration")
+        if not isinstance(agent, str) or not agent:
+            return None
+
+        if not bool(opts.get("ai_skills")):
+            return None
+
+        skills_dir = _get_skills_dir(self.project_root, agent)
+        if not skills_dir.is_dir():
+            return None
+
+        return skills_dir
+
+    @staticmethod
+    def _skill_title_from_command(cmd_name: str) -> str:
+        """Return a human-friendly title for a skill command name."""
+        title_name = cmd_name
+        if title_name.startswith("kiss."):
+            title_name = title_name[len("kiss."):]
+        return title_name.replace(".", " ").replace("-", " ").title()
+
+    def _build_extension_skill_restore_index(self) -> Dict[str, Dict[str, Any]]:
+        """Index extension-backed skill restore data by skill directory name."""
+        from .extensions import ExtensionManifest, ValidationError
+
+        resolver = PresetResolver(self.project_root)
+        extensions_dir = self.project_root / ".kiss" / "extensions"
+        restore_index: Dict[str, Dict[str, Any]] = {}
+
+        for _priority, ext_id, _metadata in resolver._get_all_extensions_by_priority():
+            ext_dir = extensions_dir / ext_id
+            manifest_path = ext_dir / "extension.yml"
+            if not manifest_path.is_file():
+                continue
+
+            try:
+                manifest = ExtensionManifest(manifest_path)
+            except (ValidationError, TypeError, AttributeError):
+                continue
+
+            ext_root = ext_dir.resolve()
+            for cmd_info in manifest.commands:
+                cmd_name = cmd_info.get("name")
+                cmd_file_rel = cmd_info.get("file")
+                if not isinstance(cmd_name, str) or not isinstance(cmd_file_rel, str):
+                    continue
+
+                cmd_path = Path(cmd_file_rel)
+                if cmd_path.is_absolute():
+                    continue
+
+                try:
+                    source_file = (ext_root / cmd_path).resolve()
+                    source_file.relative_to(ext_root)
+                except (OSError, ValueError):
+                    continue
+
+                if not source_file.is_file():
+                    continue
+
+                restore_info = {
+                    "command_name": cmd_name,
+                    "source_file": source_file,
+                    "source": f"extension:{manifest.id}",
+                }
+                raw_short_name = cmd_name
+                if raw_short_name.startswith("kiss."):
+                    raw_short_name = raw_short_name[len("kiss."):]
+                skill_name = f"kiss-{raw_short_name.replace('.', '-')}"
+                restore_index.setdefault(skill_name, restore_info)
+
+        return restore_index
+
+    def _register_skills(
+        self,
+        manifest: "PresetManifest",
+        preset_dir: Path,
+    ) -> List[str]:
+        """Generate SKILL.md files for preset command overrides.
+
+        For every command template in the preset, checks whether a
+        corresponding skill already exists in any detected skills
+        directory.  If so, the skill is overwritten with content derived
+        from the preset's command file.  This ensures that presets that
+        override commands also propagate to the agentskills.io skill
+        layer when ``--ai-skills`` was used during project initialisation.
+
+        Args:
+            manifest: Preset manifest.
+            preset_dir: Installed preset directory.
+
+        Returns:
+            List of skill names that were written (for registry storage).
+        """
+        command_templates = [
+            t for t in manifest.templates if t.get("type") == "command"
+        ]
+        if not command_templates:
+            return []
+
+        # Filter out extension command overrides if the extension isn't installed,
+        # matching the same logic used by _register_commands().
+        extensions_dir = self.project_root / ".kiss" / "extensions"
+        filtered = []
+        for cmd in command_templates:
+            parts = cmd["name"].split(".")
+            if len(parts) >= 3 and parts[0] == "kiss":
+                ext_id = parts[1]
+                if not (extensions_dir / ext_id).is_dir():
+                    continue
+            filtered.append(cmd)
+
+        if not filtered:
+            return []
+
+        skills_dir = self._get_skills_dir()
+        if not skills_dir:
+            return []
+
+        from . import SKILL_DESCRIPTIONS
+        from .config import load_init_options
+        from .agents import CommandRegistrar
+        from .integrations import get_integration
+
+        init_opts = load_init_options(self.project_root)
+        if not isinstance(init_opts, dict):
+            init_opts = {}
+        selected_ai = init_opts.get("integration")
+        if not isinstance(selected_ai, str):
+            return []
+        ai_skills_enabled = bool(init_opts.get("ai_skills"))
+        registrar = CommandRegistrar()
+        integration = get_integration(selected_ai)
+        agent_config = registrar.AGENT_CONFIGS.get(selected_ai, {})
+        # Native skill agents (e.g. codex, cursor-agent) materialize brand-new
+        # preset skills in _register_commands() because their detected agent
+        # directory is already the skills directory. This flag is only for
+        # command-backed agents that also mirror commands into skills.
+        create_missing_skills = ai_skills_enabled and agent_config.get("extension") != "/SKILL.md"
+
+        written: List[str] = []
+
+        for cmd_tmpl in filtered:
+            cmd_name = cmd_tmpl["name"]
+            cmd_file_rel = cmd_tmpl["file"]
+            source_file = preset_dir / cmd_file_rel
+            if not source_file.exists():
+                continue
+
+            # Derive the short command name (e.g. "specify" from "kiss.specify")
+            raw_short_name = cmd_name
+            if raw_short_name.startswith("kiss."):
+                raw_short_name = raw_short_name[len("kiss."):]
+            short_name = raw_short_name.replace(".", "-")
+            skill_name = f"kiss-{raw_short_name.replace('.', '-')}"
+            skill_title = self._skill_title_from_command(cmd_name)
+
+            # Only overwrite skills that already exist under skills_dir.
+            target_skill_names: List[str] = []
+            if (skills_dir / skill_name).is_dir():
+                target_skill_names.append(skill_name)
+            if not target_skill_names and create_missing_skills:
+                missing_skill_dir = skills_dir / skill_name
+                if not missing_skill_dir.exists():
+                    target_skill_names.append(skill_name)
+            if not target_skill_names:
+                continue
+
+            # Parse the command file
+            content = source_file.read_text(encoding="utf-8")
+            frontmatter, body = registrar.parse_frontmatter(content)
+
+            if frontmatter.get("strategy") == "wrap":
+                body, core_frontmatter = _substitute_core_template(body, cmd_name, self.project_root, registrar)
+                frontmatter = dict(frontmatter)
+                for key in ("scripts", "agent_scripts"):
+                    if key not in frontmatter and key in core_frontmatter:
+                        frontmatter[key] = core_frontmatter[key]
+
+            original_desc = frontmatter.get("description", "")
+            enhanced_desc = SKILL_DESCRIPTIONS.get(
+                short_name,
+                original_desc or f"Spec-kit workflow command: {short_name}",
+            )
+            frontmatter = dict(frontmatter)
+            frontmatter["description"] = enhanced_desc
+            body = registrar.resolve_skill_placeholders(
+                selected_ai, frontmatter, body, self.project_root
+            )
+
+            for target_skill_name in target_skill_names:
+                skills_subdir = skills_dir / target_skill_name
+                if skills_subdir.exists() and not skills_subdir.is_dir():
+                    continue
+                skills_subdir.mkdir(parents=True, exist_ok=True)
+                frontmatter_data = registrar.build_skill_frontmatter(
+                    selected_ai,
+                    target_skill_name,
+                    enhanced_desc,
+                    f"preset:{manifest.id}",
+                )
+                frontmatter_text = yaml.safe_dump(frontmatter_data, sort_keys=False).strip()
+                skill_content = (
+                    f"---\n"
+                    f"{frontmatter_text}\n"
+                    f"---\n\n"
+                    f"# Speckit {skill_title} Skill\n\n"
+                    f"{body}\n"
+                )
+                if integration is not None and hasattr(integration, "post_process_skill_content"):
+                    skill_content = integration.post_process_skill_content(
+                        skill_content
+                    )
+
+                skill_file = skills_subdir / "SKILL.md"
+                skill_file.write_text(skill_content, encoding="utf-8")
+                written.append(target_skill_name)
+
+        return written
+
+    def _unregister_skills(self, skill_names: List[str], preset_dir: Path) -> None:
+        """Restore original SKILL.md files after a preset is removed.
+
+        For each skill that was overridden by the preset, attempts to
+        regenerate the skill from the core command template.  If no core
+        template exists, the skill directory is removed.
+
+        Args:
+            skill_names: List of skill names written by the preset.
+            preset_dir: The preset's installed directory (may already be deleted).
+        """
+        if not skill_names:
+            return
+
+        skills_dir = self._get_skills_dir()
+        if not skills_dir:
+            return
+
+        from . import SKILL_DESCRIPTIONS
+        from .config import load_init_options
+        from .agents import CommandRegistrar
+        from .integrations import get_integration
+
+        # Locate core command templates from the project's installed templates
+        core_templates_dir = self.project_root / ".kiss" / "templates" / "commands"
+        init_opts = load_init_options(self.project_root)
+        if not isinstance(init_opts, dict):
+            init_opts = {}
+        selected_ai = init_opts.get("integration")
+        registrar = CommandRegistrar()
+        integration = get_integration(selected_ai) if isinstance(selected_ai, str) else None
+        extension_restore_index = self._build_extension_skill_restore_index()
+
+        for skill_name in skill_names:
+            # Derive command name from skill name (kiss-specify -> specify)
+            short_name = skill_name
+            if short_name.startswith("kiss-"):
+                short_name = short_name[len("kiss-"):]
+            elif short_name.startswith("kiss."):
+                short_name = short_name[len("kiss."):]
+
+            skills_subdir = skills_dir / skill_name
+            skill_file = skills_subdir / "SKILL.md"
+            if not skills_subdir.is_dir():
+                continue
+            if not skill_file.is_file():
+                # Only manage directories that contain the expected skill entrypoint.
+                continue
+
+            # Try to find the core command template
+            core_file = core_templates_dir / f"{short_name}.md" if core_templates_dir.exists() else None
+            if core_file and not core_file.exists():
+                core_file = None
+
+            if core_file:
+                # Restore from core template
+                content = core_file.read_text(encoding="utf-8")
+                frontmatter, body = registrar.parse_frontmatter(content)
+                if isinstance(selected_ai, str):
+                    body = registrar.resolve_skill_placeholders(
+                        selected_ai, frontmatter, body, self.project_root
+                    )
+
+                original_desc = frontmatter.get("description", "")
+                enhanced_desc = SKILL_DESCRIPTIONS.get(
+                    short_name,
+                    original_desc or f"Spec-kit workflow command: {short_name}",
+                )
+
+                frontmatter_data = registrar.build_skill_frontmatter(
+                    selected_ai if isinstance(selected_ai, str) else "",
+                    skill_name,
+                    enhanced_desc,
+                    f"agent-skills/kiss-{short_name}/kiss-{short_name}.md",
+                )
+                frontmatter_text = yaml.safe_dump(frontmatter_data, sort_keys=False).strip()
+                skill_title = self._skill_title_from_command(short_name)
+                skill_content = (
+                    f"---\n"
+                    f"{frontmatter_text}\n"
+                    f"---\n\n"
+                    f"# Speckit {skill_title} Skill\n\n"
+                    f"{body}\n"
+                )
+                if integration is not None and hasattr(integration, "post_process_skill_content"):
+                    skill_content = integration.post_process_skill_content(
+                        skill_content
+                    )
+                skill_file.write_text(skill_content, encoding="utf-8")
+                continue
+
+            extension_restore = extension_restore_index.get(skill_name)
+            if extension_restore:
+                content = extension_restore["source_file"].read_text(encoding="utf-8")
+                frontmatter, body = registrar.parse_frontmatter(content)
+                if isinstance(selected_ai, str):
+                    body = registrar.resolve_skill_placeholders(
+                        selected_ai, frontmatter, body, self.project_root
+                    )
+
+                command_name = extension_restore["command_name"]
+                title_name = self._skill_title_from_command(command_name)
+
+                frontmatter_data = registrar.build_skill_frontmatter(
+                    selected_ai if isinstance(selected_ai, str) else "",
+                    skill_name,
+                    frontmatter.get("description", f"Extension command: {command_name}"),
+                    extension_restore["source"],
+                )
+                frontmatter_text = yaml.safe_dump(frontmatter_data, sort_keys=False).strip()
+                skill_content = (
+                    f"---\n"
+                    f"{frontmatter_text}\n"
+                    f"---\n\n"
+                    f"# {title_name} Skill\n\n"
+                    f"{body}\n"
+                )
+                if integration is not None and hasattr(integration, "post_process_skill_content"):
+                    skill_content = integration.post_process_skill_content(
+                        skill_content
+                    )
+                skill_file.write_text(skill_content, encoding="utf-8")
+            else:
+                # No core or extension template — remove the skill entirely
+                shutil.rmtree(skills_subdir)
+
+    def install_from_directory(
+        self,
+        source_dir: Path,
+        kiss_version: str,
+        priority: int = 10,
+    ) -> PresetManifest:
+        """Install preset from a local directory.
+
+        Args:
+            source_dir: Path to preset directory
+            kiss_version: Current kiss version
+            priority: Resolution priority (lower = higher precedence, default 10)
+
+        Returns:
+            Installed preset manifest
+
+        Raises:
+            PresetValidationError: If manifest is invalid or priority is invalid
+            PresetCompatibilityError: If pack is incompatible
+        """
+        # Validate priority
+        if priority < 1:
+            raise PresetValidationError("Priority must be a positive integer (1 or higher)")
+
+        manifest_path = source_dir / "preset.yml"
+        manifest = PresetManifest(manifest_path)
+
+        self.check_compatibility(manifest, kiss_version)
+
+        if self.registry.is_installed(manifest.id):
+            raise PresetError(
+                f"Preset '{manifest.id}' is already installed. "
+                f"Use 'kiss preset remove {manifest.id}' first."
+            )
+
+        dest_dir = self.presets_dir / manifest.id
+        if dest_dir.exists():
+            shutil.rmtree(dest_dir)
+
+        shutil.copytree(source_dir, dest_dir)
+
+        # Register command overrides with AI agents
+        registered_commands = self._register_commands(manifest, dest_dir)
+
+        # Update corresponding skills when --ai-skills was previously used
+        registered_skills = self._register_skills(manifest, dest_dir)
+
+        # Detect wrap commands before registry.add() so a read failure doesn't
+        # leave a partially-committed registry entry.
+        wrap_commands = []
+        try:
+            from .agents import CommandRegistrar as _CR
+            _registrar = _CR()
+            for cmd_tmpl in manifest.templates:
+                if cmd_tmpl.get("type") != "command":
+                    continue
+                cmd_file = dest_dir / cmd_tmpl["file"]
+                if not cmd_file.exists():
+                    continue
+                cmd_fm, _ = _registrar.parse_frontmatter(cmd_file.read_text(encoding="utf-8"))
+                if cmd_fm.get("strategy") == "wrap":
+                    wrap_commands.append(cmd_tmpl["name"])
+        except ImportError:
+            pass
+
+        self.registry.add(manifest.id, {
+            "version": manifest.version,
+            "source": "local",
+            "manifest_hash": manifest.get_hash(),
+            "enabled": True,
+            "priority": priority,
+            "registered_commands": registered_commands,
+            "registered_skills": registered_skills,
+            "wrap_commands": wrap_commands,
+        })
+
+        for cmd_name in wrap_commands:
+            self._replay_wraps_for_command(cmd_name)
+
+        return manifest
+
+    def install_from_zip(
+        self,
+        zip_path: Path,
+        kiss_version: str,
+        priority: int = 10,
+    ) -> PresetManifest:
+        """Install preset from ZIP file.
+
+        Args:
+            zip_path: Path to preset ZIP file
+            kiss_version: Current kiss version
+            priority: Resolution priority (lower = higher precedence, default 10)
+
+        Returns:
+            Installed preset manifest
+
+        Raises:
+            PresetValidationError: If manifest is invalid or priority is invalid
+            PresetCompatibilityError: If pack is incompatible
+        """
+        # Validate priority early
+        if priority < 1:
+            raise PresetValidationError("Priority must be a positive integer (1 or higher)")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_path = Path(tmpdir)
+
+            with zipfile.ZipFile(zip_path, 'r') as zf:
+                temp_path_resolved = temp_path.resolve()
+                for member in zf.namelist():
+                    member_path = (temp_path / member).resolve()
+                    try:
+                        member_path.relative_to(temp_path_resolved)
+                    except ValueError:
+                        raise PresetValidationError(
+                            f"Unsafe path in ZIP archive: {member} "
+                            "(potential path traversal)"
+                        )
+                zf.extractall(temp_path)
+
+            pack_dir = temp_path
+            manifest_path = pack_dir / "preset.yml"
+
+            if not manifest_path.exists():
+                subdirs = [d for d in temp_path.iterdir() if d.is_dir()]
+                if len(subdirs) == 1:
+                    pack_dir = subdirs[0]
+                    manifest_path = pack_dir / "preset.yml"
+
+            if not manifest_path.exists():
+                raise PresetValidationError(
+                    "No preset.yml found in ZIP file"
+                )
+
+            return self.install_from_directory(pack_dir, kiss_version, priority)
+
+    def remove(self, pack_id: str) -> bool:
+        """Remove an installed preset.
+
+        Args:
+            pack_id: Preset ID
+
+        Returns:
+            True if pack was removed
+        """
+        if not self.registry.is_installed(pack_id):
+            return False
+
+        metadata = self.registry.get(pack_id)
+        # Restore original skills when preset is removed
+        registered_skills = metadata.get("registered_skills", []) if metadata else []
+        registered_commands = metadata.get("registered_commands", {}) if metadata else {}
+        wrap_commands = metadata.get("wrap_commands", []) if metadata else []
+        pack_dir = self.presets_dir / pack_id
+
+        # _unregister_skills must run before directory deletion (reads preset files)
+        if registered_skills:
+            self._unregister_skills(registered_skills, pack_dir)
+            # When _unregister_skills has already handled skill-agent files, strip
+            # those entries from registered_commands to avoid double-deletion.
+            # (When registered_skills is empty, skill-agent entries in
+            # registered_commands are the only deletion path for those files.)
+            try:
+                from .agents import CommandRegistrar
+            except ImportError:
+                CommandRegistrar = None
+            if CommandRegistrar is not None:
+                registered_commands = {
+                    agent_name: cmd_names
+                    for agent_name, cmd_names in registered_commands.items()
+                    if CommandRegistrar.AGENT_CONFIGS.get(agent_name, {}).get("extension") != "/SKILL.md"
+                }
+
+        # Delete the preset directory before mutating the registry so a
+        # filesystem failure cannot leave files on disk without a registry entry.
+        if pack_dir.exists():
+            shutil.rmtree(pack_dir)
+
+        # Remove from registry before replaying so _replay_wraps_for_command sees
+        # the post-removal registry state.
+        self.registry.remove(pack_id)
+
+        # Separate wrap commands from non-wrap commands in registered_commands.
+        non_wrap_commands = {
+            agent_name: [c for c in cmd_names if c not in wrap_commands]
+            for agent_name, cmd_names in registered_commands.items()
+        }
+        non_wrap_commands = {k: v for k, v in non_wrap_commands.items() if v}
+
+        # Unregister non-wrap command files from AI agents.
+        if non_wrap_commands:
+            self._unregister_commands(non_wrap_commands)
+
+        # For each wrapped command, either re-compose remaining wraps or delete.
+        for cmd_name in wrap_commands:
+            remaining = [
+                pid for pid, meta in self.registry.list().items()
+                if cmd_name in meta.get("wrap_commands", [])
+            ]
+            if remaining:
+                self._replay_wraps_for_command(cmd_name)
+            else:
+                # No wrap presets remain — delete the agent file entirely.
+                wrap_agent_commands = {
+                    agent_name: [c for c in cmd_names if c == cmd_name]
+                    for agent_name, cmd_names in registered_commands.items()
+                }
+                wrap_agent_commands = {k: v for k, v in wrap_agent_commands.items() if v}
+                if wrap_agent_commands:
+                    self._unregister_commands(wrap_agent_commands)
+
+        return True
+
+    def list_installed(self) -> List[Dict[str, Any]]:
+        """List all installed presets with metadata.
+
+        Returns:
+            List of preset metadata dictionaries
+        """
+        result = []
+
+        for pack_id, metadata in self.registry.list().items():
+            # Ensure metadata is a dictionary to avoid AttributeError when using .get()
+            if not isinstance(metadata, dict):
+                metadata = {}
+            pack_dir = self.presets_dir / pack_id
+            manifest_path = pack_dir / "preset.yml"
+
+            try:
+                manifest = PresetManifest(manifest_path)
+                result.append({
+                    "id": pack_id,
+                    "name": manifest.name,
+                    "version": metadata.get("version", manifest.version),
+                    "description": manifest.description,
+                    "enabled": metadata.get("enabled", True),
+                    "installed_at": metadata.get("installed_at"),
+                    "template_count": len(manifest.templates),
+                    "tags": manifest.tags,
+                    "priority": normalize_priority(metadata.get("priority")),
+                })
+            except PresetValidationError:
+                result.append({
+                    "id": pack_id,
+                    "name": pack_id,
+                    "version": metadata.get("version", "unknown"),
+                    "description": "⚠️ Corrupted preset",
+                    "enabled": False,
+                    "installed_at": metadata.get("installed_at"),
+                    "template_count": 0,
+                    "tags": [],
+                    "priority": normalize_priority(metadata.get("priority")),
+                })
+
+        return result
+
+    def get_pack(self, pack_id: str) -> Optional[PresetManifest]:
+        """Get manifest for an installed preset.
+
+        Args:
+            pack_id: Preset ID
+
+        Returns:
+            Preset manifest or None if not installed
+        """
+        if not self.registry.is_installed(pack_id):
+            return None
+
+        pack_dir = self.presets_dir / pack_id
+        manifest_path = pack_dir / "preset.yml"
+
+        try:
+            return PresetManifest(manifest_path)
+        except PresetValidationError:
+            return None
+
+
+class PresetCatalog:
+    """Manages preset catalog fetching, caching, and searching.
+
+    Supports multi-catalog stacks with priority-based resolution,
+    mirroring the extension catalog system.
+    """
+
+    # kiss is offline-only (Phase 4): the only catalog is the one bundled with
+    # the installed package.  A sentinel URL is kept so code that still reads
+    # `entry.url` has a non-empty string; it is never dereferenced.
+    from ._bundled_catalogs import BUNDLED_CATALOG_URL as _BUNDLED_URL
+    DEFAULT_CATALOG_URL = _BUNDLED_URL
+    CACHE_DURATION = 3600  # 1 hour in seconds (retained for API compatibility)
+
+    def __init__(self, project_root: Path):
+        """Initialize preset catalog manager.
+
+        Args:
+            project_root: Root directory of the kiss project
+        """
+        self.project_root = project_root
+        self.presets_dir = project_root / ".kiss" / "presets"
+        self.cache_dir = self.presets_dir / ".cache"
+        self.cache_file = self.cache_dir / "catalog.json"
+        self.cache_metadata_file = self.cache_dir / "catalog-metadata.json"
+
+    def _validate_catalog_url(self, url: str) -> None:
+        """Validate that a catalog URL uses HTTPS (localhost HTTP allowed).
+
+        Args:
+            url: URL to validate
+
+        Raises:
+            PresetValidationError: If URL is invalid or uses non-HTTPS scheme
+        """
+        from urllib.parse import urlparse
+
+        parsed = urlparse(url)
+        is_localhost = parsed.hostname in ("localhost", "127.0.0.1", "::1")
+        if parsed.scheme != "https" and not (
+            parsed.scheme == "http" and is_localhost
+        ):
+            raise PresetValidationError(
+                f"Catalog URL must use HTTPS (got {parsed.scheme}://). "
+                "HTTP is only allowed for localhost."
+            )
+        if not parsed.netloc:
+            raise PresetValidationError(
+                "Catalog URL must be a valid URL with a host."
+            )
+
+    def _load_catalog_config(self, config_path: Path) -> Optional[List[PresetCatalogEntry]]:
+        """Load catalog stack configuration from a YAML file.
+
+        Args:
+            config_path: Path to preset-catalogs.yml
+
+        Returns:
+            Ordered list of PresetCatalogEntry objects, or None if file
+            doesn't exist or contains no valid catalog entries.
+
+        Raises:
+            PresetValidationError: If any catalog entry has an invalid URL,
+                the file cannot be parsed, or a priority value is invalid.
+        """
+        if not config_path.exists():
+            return None
+        try:
+            data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        except (yaml.YAMLError, OSError, UnicodeError) as e:
+            raise PresetValidationError(
+                f"Failed to read catalog config {config_path}: {e}"
+            )
+        if not isinstance(data, dict):
+            raise PresetValidationError(
+                f"Invalid catalog config {config_path}: expected a mapping at root, got {type(data).__name__}"
+            )
+        catalogs_data = data.get("catalogs", [])
+        if not catalogs_data:
+            return None
+        if not isinstance(catalogs_data, list):
+            raise PresetValidationError(
+                f"Invalid catalog config: 'catalogs' must be a list, got {type(catalogs_data).__name__}"
+            )
+        entries: List[PresetCatalogEntry] = []
+        for idx, item in enumerate(catalogs_data):
+            if not isinstance(item, dict):
+                raise PresetValidationError(
+                    f"Invalid catalog entry at index {idx}: expected a mapping, got {type(item).__name__}"
+                )
+            url = str(item.get("url", "")).strip()
+            if not url:
+                continue
+            self._validate_catalog_url(url)
+            try:
+                priority = int(item.get("priority", idx + 1))
+            except (TypeError, ValueError):
+                raise PresetValidationError(
+                    f"Invalid priority for catalog '{item.get('name', idx + 1)}': "
+                    f"expected integer, got {item.get('priority')!r}"
+                )
+            raw_install = item.get("install_allowed", False)
+            if isinstance(raw_install, str):
+                install_allowed = raw_install.strip().lower() in ("true", "yes", "1")
+            else:
+                install_allowed = bool(raw_install)
+            entries.append(PresetCatalogEntry(
+                url=url,
+                name=str(item.get("name", f"catalog-{idx + 1}")),
+                priority=priority,
+                install_allowed=install_allowed,
+                description=str(item.get("description", "")),
+            ))
+        entries.sort(key=lambda e: e.priority)
+        return entries if entries else None
+
+    def get_active_catalogs(self) -> List[PresetCatalogEntry]:
+        """Return the sole active catalog — the one bundled with kiss.
+
+        kiss is offline-only (Phase 4): there is no ``--remote`` flag, no
+        community catalog, and no network fetch.  Env-var overrides and
+        ``preset-catalogs.yml`` files are ignored.
+        """
+        return [
+            PresetCatalogEntry(
+                url=self.DEFAULT_CATALOG_URL,
+                name="bundled",
+                priority=1,
+                install_allowed=True,
+                description="Built-in catalog of bundled presets",
+            ),
+        ]
+
+    def get_catalog_url(self) -> str:
+        """Get the primary catalog URL.
+
+        Returns the URL of the highest-priority catalog.
+        Use get_active_catalogs() for full multi-catalog support.
+
+        Returns:
+            URL of the primary catalog
+        """
+        active = self.get_active_catalogs()
+        return active[0].url if active else self.DEFAULT_CATALOG_URL
+
+    def _get_cache_paths(self, url: str):
+        """Get cache file paths for the bundled catalog.
+
+        kiss is offline-only and uses only the bundled catalog, so all
+        URLs resolve to the same cache paths.
+
+        Returns:
+            Tuple of (cache_file_path, cache_metadata_path)
+        """
+        return self.cache_file, self.cache_metadata_file
+
+    def _fetch_single_catalog(self, entry: PresetCatalogEntry, force_refresh: bool = False) -> Dict[str, Any]:
+        """Return the bundled preset catalog data.
+
+        kiss is offline-only: this method ignores *entry.url* and
+        *force_refresh* and reads only the ``catalog.json`` that ships with
+        the installed package.
+        """
+        from ._bundled_catalogs import load_bundled_catalog
+        return load_bundled_catalog("presets")
+
+    def _get_merged_packs(self, force_refresh: bool = False) -> Dict[str, Dict[str, Any]]:
+        """Fetch and merge presets from all active catalogs.
+
+        Higher-priority catalogs (lower priority number) win on ID conflicts.
+
+        Returns:
+            Merged dictionary of pack_id -> pack_data
+        """
+        active_catalogs = self.get_active_catalogs()
+        merged: Dict[str, Dict[str, Any]] = {}
+
+        for entry in reversed(active_catalogs):
+            try:
+                data = self._fetch_single_catalog(entry, force_refresh)
+                for pack_id, pack_data in data.get("presets", {}).items():
+                    pack_data_with_catalog = {**pack_data, "_catalog_name": entry.name, "_install_allowed": entry.install_allowed}
+                    merged[pack_id] = pack_data_with_catalog
+            except PresetError:
+                continue
+
+        return merged
+
+    def is_cache_valid(self) -> bool:
+        """Check if cached catalog is still valid.
+
+        Returns:
+            True if cache exists and is within cache duration
+        """
+        if not self.cache_file.exists() or not self.cache_metadata_file.exists():
+            return False
+
+        try:
+            metadata = json.loads(self.cache_metadata_file.read_text(encoding="utf-8"))
+            cached_at = datetime.fromisoformat(metadata.get("cached_at", ""))
+            if cached_at.tzinfo is None:
+                cached_at = cached_at.replace(tzinfo=timezone.utc)
+            age_seconds = (
+                datetime.now(timezone.utc) - cached_at
+            ).total_seconds()
+            return age_seconds < self.CACHE_DURATION
+        except (json.JSONDecodeError, ValueError, KeyError, TypeError):
+            return False
+
+    def fetch_catalog(self, force_refresh: bool = False) -> Dict[str, Any]:
+        """Return the bundled preset catalog data.
+
+        kiss is offline-only: ``force_refresh`` is accepted for API
+        compatibility but has no effect — the bundled catalog is always used.
+        """
+        from ._bundled_catalogs import load_bundled_catalog
+        return load_bundled_catalog("presets")
+
+    def search(
+        self,
+        query: Optional[str] = None,
+        tag: Optional[str] = None,
+        author: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Search catalog for presets.
+
+        Searches across all active catalogs (merged by priority) so that
+        community and custom catalogs are included in results.
+
+        Args:
+            query: Search query (searches name, description, tags)
+            tag: Filter by specific tag
+            author: Filter by author name
+
+        Returns:
+            List of matching preset metadata
+        """
+        try:
+            packs = self._get_merged_packs()
+        except PresetError:
+            return []
+
+        results = []
+
+        for pack_id, pack_data in packs.items():
+            if author and pack_data.get("author", "").lower() != author.lower():
+                continue
+
+            if tag and tag.lower() not in [
+                t.lower() for t in pack_data.get("tags", [])
+            ]:
+                continue
+
+            if query:
+                query_lower = query.lower()
+                searchable_text = " ".join(
+                    [
+                        pack_data.get("name", ""),
+                        pack_data.get("description", ""),
+                        pack_id,
+                    ]
+                    + pack_data.get("tags", [])
+                ).lower()
+
+                if query_lower not in searchable_text:
+                    continue
+
+            results.append({**pack_data, "id": pack_id})
+
+        return results
+
+    def get_pack_info(
+        self, pack_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Get detailed information about a specific preset.
+
+        Searches across all active catalogs (merged by priority).
+
+        Args:
+            pack_id: ID of the preset
+
+        Returns:
+            Pack metadata or None if not found
+        """
+        try:
+            packs = self._get_merged_packs()
+        except PresetError:
+            return None
+
+        if pack_id in packs:
+            return {**packs[pack_id], "id": pack_id}
+        return None
+
+    def download_pack(
+        self, pack_id: str, target_dir: Optional[Path] = None
+    ) -> Path:
+        """Always raises — kiss is offline-only.
+
+        Retained for API compatibility; callers should use a bundled preset
+        via ``_locate_bundled_preset()`` instead.
+        """
+        raise PresetError(
+            f"Preset '{pack_id}' cannot be downloaded: kiss is offline-only. "
+            "Install bundled presets via 'kiss preset add <id>'."
+        )
+
+    def clear_cache(self):
+        """Clear all catalog cache files, including per-URL hashed caches."""
+        if self.cache_dir.exists():
+            for f in self.cache_dir.iterdir():
+                if f.is_file() and f.name.startswith("catalog"):
+                    f.unlink(missing_ok=True)
+
+
+class PresetResolver:
+    """Resolves template names to file paths using a priority stack.
+
+    Resolution order:
+    1. .kiss/templates/overrides/          - Project-local overrides
+    2. .kiss/presets/<preset-id>/          - Installed presets
+    3. .kiss/extensions/<ext-id>/templates/ - Extension-provided templates
+    4. .kiss/templates/                    - Core templates (shipped with kiss)
+    """
+
+    def __init__(self, project_root: Path):
+        """Initialize preset resolver.
+
+        Args:
+            project_root: Path to project root directory
+        """
+        self.project_root = project_root
+        self.templates_dir = project_root / ".kiss" / "templates"
+        self.presets_dir = project_root / ".kiss" / "presets"
+        self.overrides_dir = self.templates_dir / "overrides"
+        self.extensions_dir = project_root / ".kiss" / "extensions"
+
+    def _get_all_extensions_by_priority(self) -> list[tuple[int, str, dict | None]]:
+        """Build unified list of registered and unregistered extensions sorted by priority.
+
+        Registered extensions use their stored priority; unregistered directories
+        get implicit priority=10. Results are sorted by (priority, ext_id) for
+        deterministic ordering.
+
+        Returns:
+            List of (priority, ext_id, metadata_or_none) tuples sorted by priority.
+        """
+        if not self.extensions_dir.exists():
+            return []
+
+        registry = ExtensionRegistry(self.extensions_dir)
+        # Use keys() to track ALL extensions (including corrupted entries) without deep copy
+        # This prevents corrupted entries from being picked up as "unregistered" dirs
+        registered_extension_ids = registry.keys()
+
+        # Get all registered extensions including disabled; we filter disabled manually below
+        all_registered = registry.list_by_priority(include_disabled=True)
+
+        all_extensions: list[tuple[int, str, dict | None]] = []
+
+        # Only include enabled extensions in the result
+        for ext_id, metadata in all_registered:
+            # Skip disabled extensions
+            if not metadata.get("enabled", True):
+                continue
+            priority = normalize_priority(metadata.get("priority") if metadata else None)
+            all_extensions.append((priority, ext_id, metadata))
+
+        # Add unregistered directories with implicit priority=10
+        for ext_dir in self.extensions_dir.iterdir():
+            if not ext_dir.is_dir() or ext_dir.name.startswith("."):
+                continue
+            if ext_dir.name not in registered_extension_ids:
+                all_extensions.append((10, ext_dir.name, None))
+
+        # Sort by (priority, ext_id) for deterministic ordering
+        all_extensions.sort(key=lambda x: (x[0], x[1]))
+        return all_extensions
+
+    def resolve(
+        self,
+        template_name: str,
+        template_type: str = "template",
+        skip_presets: bool = False,
+    ) -> Optional[Path]:
+        """Resolve a template name to its file path.
+
+        Walks the priority stack and returns the first match.
+
+        Args:
+            template_name: Template name (e.g., "spec-template")
+            template_type: Template type ("template", "command", or "script")
+            skip_presets: When True, skip tier 2 (installed presets). Use
+                resolve_core() as the preferred caller-facing API for this.
+
+        Returns:
+            Path to the resolved template file, or None if not found
+        """
+        # Determine subdirectory based on template type
+        if template_type == "template":
+            subdirs = ["templates", ""]
+        elif template_type == "command":
+            subdirs = ["commands"]
+        elif template_type == "script":
+            subdirs = ["scripts"]
+        else:
+            subdirs = [""]
+
+        # Determine file extension based on template type
+        ext = ".md"
+        if template_type == "script":
+            ext = ".sh"  # scripts use .sh; callers can also check .ps1
+
+        # Priority 1: Project-local overrides
+        if template_type == "script":
+            override = self.overrides_dir / "scripts" / f"{template_name}{ext}"
+        else:
+            override = self.overrides_dir / f"{template_name}{ext}"
+        if override.exists():
+            return override
+
+        # Priority 2: Installed presets (sorted by priority — lower number wins)
+        if not skip_presets and self.presets_dir.exists():
+            registry = PresetRegistry(self.presets_dir)
+            for pack_id, _metadata in registry.list_by_priority():
+                pack_dir = self.presets_dir / pack_id
+                for subdir in subdirs:
+                    if subdir:
+                        candidate = pack_dir / subdir / f"{template_name}{ext}"
+                    else:
+                        candidate = pack_dir / f"{template_name}{ext}"
+                    if candidate.exists():
+                        return candidate
+
+        # Priority 3: Extension-provided templates (sorted by priority — lower number wins)
+        for _priority, ext_id, _metadata in self._get_all_extensions_by_priority():
+            ext_dir = self.extensions_dir / ext_id
+            if not ext_dir.is_dir():
+                continue
+            for subdir in subdirs:
+                if subdir:
+                    candidate = ext_dir / subdir / f"{template_name}{ext}"
+                else:
+                    candidate = ext_dir / f"{template_name}{ext}"
+                if candidate.exists():
+                    return candidate
+
+        # Priority 4: Core templates
+        if template_type == "template":
+            core = self.templates_dir / f"{template_name}.md"
+            if core.exists():
+                return core
+        elif template_type == "command":
+            core = self.templates_dir / "commands" / f"{template_name}.md"
+            if core.exists():
+                return core
+        elif template_type == "script":
+            core = self.templates_dir / "scripts" / f"{template_name}{ext}"
+            if core.exists():
+                return core
+
+        # Priority 5: Bundled core_pack (wheel install) or repo-root templates
+        # (source-checkout / editable install).  This is the canonical home for
+        # kiss's built-in command/template files and must always be checked
+        # so that strategy:wrap presets can locate {CORE_TEMPLATE}.
+        from .installer import _locate_core_pack
+        _core_pack = _locate_core_pack()
+        if _core_pack is not None:
+            # Wheel install path
+            if template_type == "template":
+                candidate = _core_pack / "templates" / f"{template_name}.md"
+            elif template_type == "command":
+                candidate = _core_pack / "commands" / f"{template_name}.md"
+            elif template_type == "script":
+                candidate = _core_pack / "scripts" / f"{template_name}{ext}"
+            else:
+                candidate = _core_pack / f"{template_name}.md"
+            if candidate.exists():
+                return candidate
+        else:
+            # Source-checkout / editable install: templates live at repo root
+            repo_root = Path(__file__).parent.parent.parent
+            if template_type == "template":
+                candidate = repo_root / "templates" / f"{template_name}.md"
+            elif template_type == "command":
+                candidate = repo_root / "templates" / "commands" / f"{template_name}.md"
+            elif template_type == "script":
+                candidate = repo_root / "scripts" / f"{template_name}{ext}"
+            else:
+                candidate = repo_root / f"{template_name}.md"
+            if candidate.exists():
+                return candidate
+
+        return None
+
+    def resolve_core(
+        self,
+        template_name: str,
+        template_type: str = "template",
+    ) -> Optional[Path]:
+        """Resolve while skipping installed presets (tier 2).
+
+        Searches tiers 1, 3, 4, and 5 (bundled core_pack / repo-root fallback).
+        Use when resolving {CORE_TEMPLATE} to guarantee the result is actual
+        base content, never another preset's wrap output.
+        """
+        return self.resolve(template_name, template_type, skip_presets=True)
+
+    def resolve_extension_command_via_manifest(self, cmd_name: str) -> Optional[Path]:
+        """Resolve an extension command by consulting installed extension manifests.
+
+        Walks installed extension directories in priority order, loads each
+        extension.yml via ExtensionManifest, and looks up the command by its
+        declared name to find the actual file path.  This is necessary because
+        the manifest's ``provides.commands[].file`` field is authoritative and
+        may differ from the command name
+        (e.g. ``kiss.selftest.extension`` → ``commands/selftest.md``).
+
+        Returns None if no manifest maps the given command name, so the caller
+        can fall back to the name-based lookup.
+        """
+        if not self.extensions_dir.exists():
+            return None
+
+        from .extensions import ExtensionManifest, ValidationError
+
+        for _priority, ext_id, _metadata in self._get_all_extensions_by_priority():
+            ext_dir = self.extensions_dir / ext_id
+            manifest_path = ext_dir / "extension.yml"
+            if not manifest_path.is_file():
+                continue
+            try:
+                manifest = ExtensionManifest(manifest_path)
+            except (ValidationError, OSError, TypeError, AttributeError):
+                continue
+            for cmd_info in manifest.commands:
+                if cmd_info.get("name") != cmd_name:
+                    continue
+                file_rel = cmd_info.get("file")
+                if not file_rel:
+                    continue
+                # Mirror the containment check in ExtensionManager to guard against
+                # path traversal via a malformed manifest (e.g. file: ../../AGENTS.md).
+                cmd_path = Path(file_rel)
+                if cmd_path.is_absolute():
+                    continue
+                try:
+                    ext_root = ext_dir.resolve()
+                    candidate = (ext_root / cmd_path).resolve()
+                    candidate.relative_to(ext_root)  # raises ValueError if outside
+                except (OSError, ValueError):
+                    continue
+                if candidate.is_file():
+                    return candidate
+        return None
+
+    def resolve_with_source(
+        self,
+        template_name: str,
+        template_type: str = "template",
+    ) -> Optional[Dict[str, str]]:
+        """Resolve a template name and return source attribution.
+
+        Args:
+            template_name: Template name (e.g., "spec-template")
+            template_type: Template type ("template", "command", or "script")
+
+        Returns:
+            Dictionary with 'path' and 'source' keys, or None if not found
+        """
+        # Delegate to resolve() for the actual lookup, then determine source
+        resolved = self.resolve(template_name, template_type)
+        if resolved is None:
+            return None
+
+        resolved_str = str(resolved)
+
+        # Determine source attribution
+        if str(self.overrides_dir) in resolved_str:
+            return {"path": resolved_str, "source": "project override"}
+
+        if str(self.presets_dir) in resolved_str and self.presets_dir.exists():
+            registry = PresetRegistry(self.presets_dir)
+            for pack_id, _metadata in registry.list_by_priority():
+                pack_dir = self.presets_dir / pack_id
+                try:
+                    resolved.relative_to(pack_dir)
+                    meta = registry.get(pack_id)
+                    version = meta.get("version", "?") if meta else "?"
+                    return {
+                        "path": resolved_str,
+                        "source": f"{pack_id} v{version}",
+                    }
+                except ValueError:
+                    continue
+
+        for _priority, ext_id, ext_meta in self._get_all_extensions_by_priority():
+            ext_dir = self.extensions_dir / ext_id
+            if not ext_dir.is_dir():
+                continue
+            try:
+                resolved.relative_to(ext_dir)
+                if ext_meta:
+                    version = ext_meta.get("version", "?")
+                    return {
+                        "path": resolved_str,
+                        "source": f"extension:{ext_id} v{version}",
+                    }
+                else:
+                    return {
+                        "path": resolved_str,
+                        "source": f"extension:{ext_id} (unregistered)",
+                    }
+            except ValueError:
+                continue
+
+        return {"path": resolved_str, "source": "core"}

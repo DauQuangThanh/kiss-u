@@ -1,0 +1,36 @@
+%% Module dependency graph (Mermaid).
+%% Adapt per project. Keep under ~25 nodes.
+
+flowchart LR
+    subgraph api[api]
+        routes
+        handlers
+    end
+
+    subgraph services[services]
+        billing
+        auth
+        notifications
+    end
+
+    subgraph infra[infra]
+        repo
+        queue
+        cache[(Cache)]
+        db[(DB)]
+    end
+
+    external[External deps]
+
+    routes --> handlers
+    handlers --> billing
+    handlers --> auth
+    handlers --> notifications
+    billing --> repo
+    auth --> repo
+    notifications --> queue
+    repo --> db
+    billing --> cache
+
+    handlers --> external
+    billing --> external

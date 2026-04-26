@@ -1,0 +1,120 @@
+# Presets
+
+Presets are stackable, priority-ordered collections of template and command overrides for kiss. They let you customize both the artifacts produced by the Spec-Driven Development workflow (specs, plans, tasks, checklists, standards) and the commands that guide the LLM in creating them — without forking or modifying core files.
+
+## How It Works
+
+When kiss needs a template (e.g. `spec-template`), it walks a resolution stack:
+
+1. `.kiss/templates/overrides/` — project-local one-off overrides
+2. `.kiss/presets/<preset-id>/templates/` — installed presets (sorted by priority)
+3. `.kiss/extensions/<ext-id>/templates/` — extension-provided templates
+4. `.kiss/templates/` — core templates shipped with kiss
+
+If no preset is installed, core templates are used — exactly the same behavior as before presets existed.
+
+Template resolution happens **at runtime** — although preset files are copied into `.kiss/presets/<id>/` during installation, kiss walks the resolution stack on every template lookup rather than merging templates into a single location.
+
+For detailed resolution and command registration flows, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Command Overrides
+
+Presets can also override the commands that guide the SDD workflow. Templates define *what* gets produced (specs, plans, standards); commands define *how* the LLM produces them (the step-by-step instructions).
+
+Unlike templates, command overrides are applied **at install time**. When a preset includes `type: "command"` entries, the commands are registered into all detected agent directories (`.claude/commands/`, `.gemini/commands/`, etc.) in the correct format (Markdown or TOML with appropriate argument placeholders). When the preset is removed, the registered commands are cleaned up.
+
+## Quick Start
+
+```bash
+# Search available presets
+kiss preset search
+
+# Install a preset from the catalog
+kiss preset add healthcare-compliance
+
+# Install from a local directory (for development)
+kiss preset add --dev ./my-preset
+
+# Install with a specific priority (lower = higher precedence)
+kiss preset add healthcare-compliance --priority 5
+
+# List installed presets
+kiss preset list
+
+# See which template a name resolves to
+kiss preset resolve spec-template
+
+# Get detailed info about a preset
+kiss preset info healthcare-compliance
+
+# Remove a preset
+kiss preset remove healthcare-compliance
+```
+
+## Stacking Presets
+
+Multiple presets can be installed simultaneously. The `--priority` flag controls which one wins when two presets provide the same template (lower number = higher precedence):
+
+```bash
+kiss preset add enterprise-safe --priority 10      # base layer
+kiss preset add healthcare-compliance --priority 5  # overrides enterprise-safe
+kiss preset add pm-workflow --priority 1            # overrides everything
+```
+
+Presets **override**, they don't merge. If two presets both provide `spec-template`, the one with the lowest priority number wins entirely.
+
+## Catalog Management
+
+Presets are discovered through catalogs. By default, kiss uses the official and community catalogs:
+
+> [!NOTE]
+> Community presets are independently created and maintained by their respective authors. GitHub and the kiss maintainers may review pull requests that add entries to the community catalog for formatting, catalog structure, or policy compliance, but they do **not review, audit, endorse, or support the preset code itself**. Review preset source code before installation and use at your own discretion.
+
+```bash
+# List active catalogs
+kiss preset catalog list
+
+# Add a custom catalog
+kiss preset catalog add https://example.com/catalog.json --name my-org --install-allowed
+
+# Remove a catalog
+kiss preset catalog remove my-org
+```
+
+## Creating a Preset
+
+See [scaffold/](scaffold/) for a scaffold you can copy to create your own preset.
+
+1. Copy `scaffold/` to a new directory
+2. Edit `preset.yml` with your preset's metadata
+3. Add or replace templates in `templates/`
+4. Test locally with `kiss preset add --dev .`
+5. Verify with `kiss preset resolve spec-template`
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `KISS_PRESET_CATALOG_URL` | Override the catalog URL (replaces all defaults) |
+
+## Configuration Files
+
+| File | Scope | Description |
+|------|-------|-------------|
+| `.kiss/preset-catalogs.yml` | Project | Custom catalog stack for this project |
+| `~/.kiss/preset-catalogs.yml` | User | Custom catalog stack for all projects |
+
+## Future Considerations
+
+The following enhancements are under consideration for future releases:
+
+- **Composition strategies** — Allow presets to declare a `strategy` per template instead of the default `replace`:
+
+  | Type | `replace` | `prepend` | `append` | `wrap` |
+  |------|-----------|-----------|----------|--------|
+  | **template** | ✓ (default) | ✓ | ✓ | ✓ |
+  | **command** | ✓ (default) | ✓ | ✓ | ✓ |
+  | **script** | ✓ (default) | — | — | ✓ |
+
+  For artifacts and commands (which are LLM directives), `wrap` injects preset content before and after the core template using a `{CORE_TEMPLATE}` placeholder (implemented). For scripts, `wrap` would run custom logic before/after the core script via a `$CORE_SCRIPT` variable (not yet implemented).
+- **Script overrides** — Enable presets to provide alternative versions of core scripts (e.g. `create-new-feature.sh`) for workflow customization. A `strategy: "wrap"` option could allow presets to run custom logic before/after the core script without fully replacing it.

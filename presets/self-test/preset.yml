@@ -1,0 +1,66 @@
+schema_version: "1.0"
+
+preset:
+  id: "self-test"
+  name: "Self-Test Preset"
+  version: "1.0.0"
+  description: "A preset that overrides all core templates for testing purposes"
+  author: "github"
+  repository: "https://github.com/DauQuangThanh/kiss-u"
+  license: "MIT"
+
+requires:
+  kiss_version: ">=0.1.0"
+
+provides:
+  templates:
+    - type: "template"
+      name: "spec-template"
+      file: "templates/spec-template.md"
+      description: "Self-test spec template"
+      replaces: "spec-template"
+
+    - type: "template"
+      name: "plan-template"
+      file: "templates/plan-template.md"
+      description: "Self-test plan template"
+      replaces: "plan-template"
+
+    - type: "template"
+      name: "task-template"
+      file: "templates/task-template.md"
+      description: "Self-test tasks template"
+      replaces: "task-template"
+
+    - type: "template"
+      name: "checklist-template"
+      file: "templates/checklist-template.md"
+      description: "Self-test checklist template"
+      replaces: "checklist-template"
+
+    - type: "template"
+      name: "standard-template"
+      file: "templates/standard-template.md"
+      description: "Self-test standardize template"
+      replaces: "standard-template"
+
+    - type: "template"
+      name: "agent-file-template"
+      file: "templates/agent-file-template.md"
+      description: "Self-test agent file template"
+      replaces: "agent-file-template"
+
+    - type: "command"
+      name: "kiss.specify"
+      file: "commands/kiss.specify.md"
+      description: "Self-test override of the specify command"
+      replaces: "kiss.specify"
+
+    - type: "command"
+      name: "kiss.wrap-test"
+      file: "commands/kiss.wrap-test.md"
+      description: "Self-test wrap strategy command"
+
+tags:
+  - "testing"
+  - "self-test"

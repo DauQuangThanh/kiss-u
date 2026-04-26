@@ -1,0 +1,78 @@
+# Sample GitHub Actions pipeline — adapt per project.
+#
+# Stage ordering matches docs/operations/cicd.md.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint
+        run: |
+          # TODO(kiss-cicd): wire the project's linter here.
+          echo "lint"
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: |
+          # TODO(kiss-cicd): run the project's test command.
+          echo "unit"
+
+  security:
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: SAST + secret scan
+        run: |
+          # TODO(kiss-cicd): invoke SAST + secret scanner.
+          echo "security"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, security]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          # TODO(kiss-cicd): build the artefact.
+          echo "build"
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - name: Deploy to staging
+        run: |
+          # TODO(kiss-cicd): deploy the artefact tagged $GITHUB_SHA.
+          echo "staging"
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://example.com
+    steps:
+      - name: Deploy to production
+        run: |
+          # TODO(kiss-cicd): release per docs/operations/deployment.md.
+          echo "prod"
