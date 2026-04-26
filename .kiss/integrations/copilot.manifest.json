@@ -1,7 +1,7 @@
 {
   "integration": "copilot",
   "version": "0.3.0",
-  "installed_at": "2026-04-26T15:43:18.916133+00:00",
+  "installed_at": "2026-04-26T15:55:24.883241+00:00",
   "files": {
     ".github/skills/kiss-acceptance-criteria/SKILL.md": "aca70f0a85f6d5cecc90df28dd3cc9b5c0204ecd936d7ba19d77309ddeb47c27",
     ".github/skills/kiss-acceptance-criteria/scripts/bash/common.sh": "c954fd3801ccf4069e51b938884a1565dd9bcb49fe8f9bcc23f290a13bfde35d",
@@ -211,6 +211,10 @@
     ".github/skills/kiss-sprint-planning/scripts/powershell/draft-sprint.ps1": "312c11c02271e413a4bac31d6978e3eb8764f7199657fa025dd72711f16e1f9f",
     ".github/skills/kiss-sprint-planning/templates/sprint-plan-template.md": "a5e7a5a63c984959e4cdb3912da15c1950ecdf0bd9749d92241550049da3d515",
     ".github/skills/kiss-standardize/SKILL.md": "ac307552521c8299997dfe4e53b338d94ce38a9fb153e76c47462f3c57afc4bc",
+    ".github/skills/kiss-standardize/scripts/bash/common.sh": "c954fd3801ccf4069e51b938884a1565dd9bcb49fe8f9bcc23f290a13bfde35d",
+    ".github/skills/kiss-standardize/scripts/bash/update-standards.sh": "768ae2da08f92f81759be8d843fd177befcd2a55a8845d4a86ee0108a827b0b4",
+    ".github/skills/kiss-standardize/scripts/powershell/update-standards.ps1": "459b736432b6dff716b6d19878095015edbc6752c2f4796e22b649a1df490766",
+    ".github/skills/kiss-standardize/scripts/powershell/common.ps1": "db35bad4444b2f0bc7b95fbdd8db8e60d7788776b97fda9a0a8a266811d01532",
     ".github/skills/kiss-standardize/templates/checklist-template.md": "f49d4b1c27274de9a1d75fc33da9cab15492b4b701a1fc829d5601efaaeb92f2",
     ".github/skills/kiss-standardize/templates/standard-template.md": "ffd65a0cd95ad538db405e3c66be9f6fd4d6063afcfffff859aed9cbd3c88fe4",
     ".github/skills/kiss-standardize/templates/spec-template.md": "785dc50d856dd92d6515eca0761e16dce0c9ba0a3cd07154fd33eae77932422a",

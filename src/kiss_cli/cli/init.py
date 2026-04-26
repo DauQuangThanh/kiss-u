@@ -357,9 +357,12 @@ def init(
                 )
 
             # Create or merge context.yml (Phase 5.6)
+            # Always merge when the file already exists so user comments and
+            # custom values are preserved regardless of how the target path was
+            # supplied (--here, kiss init ., or an explicit directory arg).
             from kiss_cli.context import merge_context_file
             context_path = project_path / ".kiss" / "context.yml"
-            if context_path.exists() and here:
+            if context_path.exists():
                 merge_context_file(project_path, new_integrations=installed_keys)
             else:
                 create_context_file(project_path, integrations=installed_keys)

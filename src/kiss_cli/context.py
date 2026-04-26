@@ -5,34 +5,32 @@ from pathlib import Path
 from typing import Any
 
 
-def create_context_file(
-    project_path: Path,
-    integrations: list[str] = None,
+def _render_context_content(
+    integrations: list[str],
     docs_dir: str = "docs",
     specs_dir: str = "docs/specs",
     plans_dir: str = "docs/plans",
     tasks_dir: str = "docs/tasks",
     templates_dir: str = "templates",
     scripts_dir: str = "scripts",
-) -> None:
-    """Create .kiss/context.yml with the documented schema.
+    output_lang: str = "English",
+    interaction_lang: str = "English",
+    output_format: str = "markdown",
+    task_numbering: str = "sequential",
+    confirm_before_write: bool = True,
+    auto_update_context: bool = True,
+) -> str:
+    """Render the full annotated context.yml content string.
 
-    Args:
-        project_path: Root directory of the kiss project
-        integrations: List of selected integration keys (defaults to ["claude"])
-        docs_dir: Path to docs directory (relative to project root)
-        specs_dir: Path to specs directory (relative to project root)
-        plans_dir: Path to plans directory (relative to project root)
-        tasks_dir: Path to tasks directory (relative to project root)
-        templates_dir: Path to templates directory (relative to project root)
-        scripts_dir: Path to scripts directory (relative to project root)
+    Called by both ``create_context_file`` (first-time) and
+    ``merge_context_file`` (re-render with existing user values) so that
+    comments are always preserved regardless of how the file is updated.
     """
-    if integrations is None:
-        integrations = ["claude"]
-
     integrations_yaml = "\n".join(f"  - {i}" for i in integrations)
+    cbw = str(confirm_before_write).lower()
+    auc = str(auto_update_context).lower()
 
-    content = f"""\
+    return f"""\
 # kiss context file — project-level state for Spec-Driven Development (SDD).
 # AI agents and kiss commands read this file to understand the project layout
 # and track what is currently being worked on.
@@ -105,20 +103,20 @@ current:
 preferences:
   # Format used when kiss writes new documents.
   # Supported values: "markdown"
-  output_format: markdown
+  output_format: {output_format}
 
   # How tasks are numbered inside a plan.
   # "sequential" — 1, 2, 3 …
   # "timestamp"  — tasks prefixed with a date/time stamp
-  task_numbering: sequential
+  task_numbering: {task_numbering}
 
   # When true, kiss will ask for confirmation before writing any file.
   # Set to false for a fully automated / CI workflow.
-  confirm_before_write: true
+  confirm_before_write: {cbw}
 
   # When true, kiss automatically updates the "current" section above
   # whenever you run commands that change the active spec, plan, or task.
-  auto_update_context: true
+  auto_update_context: {auc}
 
 # ---------------------------------------------------------------------------
 # language — natural-language preferences for what kiss writes and asks.
@@ -131,11 +129,11 @@ preferences:
 language:
   # Language used when kiss writes documents — specs, plans, tasks,
   # designs, ADRs, reviews, status reports, and any other artefact.
-  output: English
+  output: {output_lang}
 
   # Language used when kiss asks questions, presents options, and
   # confirms decisions with the user.
-  interaction: English
+  interaction: {interaction_lang}
 
 # ---------------------------------------------------------------------------
 # integrations — AI providers that were installed into this project.
@@ -146,6 +144,42 @@ language:
 integrations:
 {integrations_yaml}
 """
+
+
+def create_context_file(
+    project_path: Path,
+    integrations: list[str] = None,
+    docs_dir: str = "docs",
+    specs_dir: str = "docs/specs",
+    plans_dir: str = "docs/plans",
+    tasks_dir: str = "docs/tasks",
+    templates_dir: str = "templates",
+    scripts_dir: str = "scripts",
+) -> None:
+    """Create .kiss/context.yml with the documented schema.
+
+    Args:
+        project_path: Root directory of the kiss project
+        integrations: List of selected integration keys (defaults to ["claude"])
+        docs_dir: Path to docs directory (relative to project root)
+        specs_dir: Path to specs directory (relative to project root)
+        plans_dir: Path to plans directory (relative to project root)
+        tasks_dir: Path to tasks directory (relative to project root)
+        templates_dir: Path to templates directory (relative to project root)
+        scripts_dir: Path to scripts directory (relative to project root)
+    """
+    if integrations is None:
+        integrations = ["claude"]
+
+    content = _render_context_content(
+        integrations=integrations,
+        docs_dir=docs_dir,
+        specs_dir=specs_dir,
+        plans_dir=plans_dir,
+        tasks_dir=tasks_dir,
+        templates_dir=templates_dir,
+        scripts_dir=scripts_dir,
+    )
 
     context_file = project_path / ".kiss" / "context.yml"
     context_file.parent.mkdir(parents=True, exist_ok=True)
@@ -193,27 +227,43 @@ def merge_context_file(
     Existing user values are preserved; only new schema keys are added.
     The ``integrations`` list is union-merged (no duplicates).
     ``schema_version`` is always updated to the template value.
+
+    Comments are preserved by re-rendering the fully-annotated template
+    with the user's existing values substituted in, rather than round-
+    tripping through ``yaml.dump`` which strips all comments.
     """
     existing = load_context_file(project_root)
     if not existing:
         create_context_file(project_root, integrations=new_integrations)
         return
 
-    # Build template defaults by reading what create_context_file would write
-    template = _build_context_template(new_integrations or [])
-    merged = _deep_merge(existing, template)
-
-    # schema_version always updates
-    if "schema_version" in template:
-        merged["schema_version"] = template["schema_version"]
-
     # Union-merge integrations list
     old_list = existing.get("integrations", [])
     new_list = new_integrations or []
     union = list(dict.fromkeys(old_list + new_list))  # preserves order, no dups
-    merged["integrations"] = union
 
-    save_context_file(project_root, merged)
+    paths = existing.get("paths", {}) or {}
+    prefs = existing.get("preferences", {}) or {}
+    lang  = existing.get("language", {}) or {}
+
+    content = _render_context_content(
+        integrations=union,
+        docs_dir=paths.get("docs", "docs"),
+        specs_dir=paths.get("specs", "docs/specs"),
+        plans_dir=paths.get("plans", "docs/plans"),
+        tasks_dir=paths.get("tasks", "docs/tasks"),
+        templates_dir=paths.get("templates", "templates"),
+        scripts_dir=paths.get("scripts", "scripts"),
+        output_lang=lang.get("output", "English"),
+        interaction_lang=lang.get("interaction", "English"),
+        output_format=prefs.get("output_format", "markdown"),
+        task_numbering=prefs.get("task_numbering", "sequential"),
+        confirm_before_write=prefs.get("confirm_before_write", True),
+        auto_update_context=prefs.get("auto_update_context", True),
+    )
+
+    context_file = project_root / ".kiss" / "context.yml"
+    context_file.write_text(content, encoding="utf-8")
 
 
 def _build_context_template(integrations: list[str]) -> dict[str, Any]:
