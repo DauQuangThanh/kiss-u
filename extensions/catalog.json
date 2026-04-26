@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-04-10T00:00:00Z",
+  "extensions": {
+    "git": {
+      "name": "Git Branching Workflow",
+      "id": "git",
+      "version": "1.0.0",
+      "description": "Feature branch creation, numbering (sequential/timestamp), validation, and Git remote detection",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "bundled": true,
+      "tags": [
+        "git",
+        "branching",
+        "workflow",
+        "core"
+      ]
+    }
+  }
+}

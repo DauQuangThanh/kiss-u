@@ -1,0 +1,37 @@
+# Alert rules starter (Prometheus / Alertmanager format).
+# Adapt to the chosen stack.
+
+groups:
+  - name: availability
+    rules:
+      - alert: AvailabilityFastBurn
+        expr: availability_5m:ratio < 0.98
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "Fast burn — availability below 98% for 5 minutes"
+
+      - alert: AvailabilitySlowBurn
+        expr: availability_1h:ratio < 0.995
+        for: 1h
+        labels: { severity: ticket }
+        annotations:
+          summary: "Slow burn — availability below 99.5% for an hour"
+
+  - name: latency
+    rules:
+      - alert: HighP95Latency
+        expr: histogram_quantile(0.95, sum(rate(request_duration_seconds_bucket[5m])) by (le, service)) > 0.3
+        for: 10m
+        labels: { severity: page }
+        annotations:
+          summary: "p95 latency above 300ms for 10 minutes"
+
+  - name: saturation
+    rules:
+      - alert: HighCpuSaturation
+        expr: avg(rate(process_cpu_seconds_total[5m])) > 0.8
+        for: 15m
+        labels: { severity: ticket }
+        annotations:
+          summary: "CPU saturation above 80% for 15 minutes"

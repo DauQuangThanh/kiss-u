@@ -1,0 +1,60 @@
+name: Validate agentskills.io compliance
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  validate-skills:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dev dependencies
+        run: uv sync --extra dev
+
+      - name: Discover bundled SKILL.md directories
+        id: discover
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          roots = [Path("templates/commands"), Path("extensions"), Path("presets")]
+          dirs = sorted({p.parent for r in roots if r.exists() for p in r.rglob("SKILL.md")})
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"count={len(dirs)}\n")
+              fh.write("dirs<<EOF\n")
+              for d in dirs:
+                  fh.write(f"{d}\n")
+              fh.write("EOF\n")
+          print(f"Found {len(dirs)} skill director{'y' if len(dirs)==1 else 'ies'}")
+          for d in dirs:
+              print(f"  {d}")
+          PY
+
+      - name: Validate each bundled skill with skills-ref
+        if: steps.discover.outputs.count != '0'
+        run: |
+          set -e
+          while IFS= read -r d; do
+            [ -z "$d" ] && continue
+            echo "::group::skills-ref validate $d"
+            uv run python -m skills_ref.cli validate "$d"
+            echo "::endgroup::"
+          done <<< "${{ steps.discover.outputs.dirs }}"
+
+      - name: Run compliance test suite
+        run: uv run pytest tests/test_agent_skills_compliance.py -v

@@ -1,0 +1,140 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION_NO_V=${VERSION#v}
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+          echo "no_v=$VERSION_NO_V" >> $GITHUB_OUTPUT
+          echo "Building release for $VERSION"
+
+      - name: Check if release already exists
+        id: check_release
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release $VERSION already exists, skipping..."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Release $VERSION does not exist, proceeding..."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        if: steps.check_release.outputs.exists == 'false'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        if: steps.check_release.outputs.exists == 'false'
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
+      - name: Build wheel and sdist
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          # The custom hatch build hook stages the whole repo-root asset
+          # tree (agent-skills/, subagents/, presets/, extensions/,
+          # workflows/, integrations/catalog.json) into build/core_pack/,
+          # then force-include in pyproject.toml maps that into the wheel
+          # as kiss_cli/core_pack/ so the wheel is self-contained and
+          # works fully offline.
+          uv build --wheel --sdist --out-dir dist
+          echo "Built artifacts:"
+          ls -lh dist/
+
+      - name: Generate SHA-256 checksums for release artifacts
+        if: steps.check_release.outputs.exists == 'false'
+        working-directory: dist
+        run: |
+          sha256sum *.whl *.tar.gz > SHA256SUMS
+          echo "Artifact checksums:"
+          cat SHA256SUMS
+
+      - name: Generate release notes
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          VERSION_NO_V="${{ steps.version.outputs.no_v }}"
+
+          # Find previous tag
+          PREVIOUS_TAG=$(git tag -l 'v*' --sort=-version:refname | grep -v "^${VERSION}$" | head -n 1)
+
+          # Collect commits since the previous tag (cap to 20 on first release)
+          if [ -z "$PREVIOUS_TAG" ]; then
+            COMMIT_COUNT=$(git rev-list --count HEAD)
+            if [ "$COMMIT_COUNT" -gt 20 ]; then
+              COMMITS=$(git log --oneline --pretty=format:"- %s" --no-merges HEAD~20..HEAD)
+            else
+              COMMITS=$(git log --oneline --pretty=format:"- %s" --no-merges)
+            fi
+          else
+            COMMITS=$(git log --oneline --pretty=format:"- %s" --no-merges "$PREVIOUS_TAG"..HEAD)
+          fi
+
+          cat > release_notes.md << NOTES_EOF
+          ## Install
+
+          Install from Git (recommended — builds the wheel locally):
+
+          \`\`\`bash
+          uv tool install kiss --from git+https://github.com/DauQuangThanh/kiss-u.git@${VERSION}
+          kiss init my-project
+          \`\`\`
+
+          Or install directly from the attached wheel (handy for air-gapped setups):
+
+          \`\`\`bash
+          # Download kiss-${VERSION_NO_V}-py3-none-any.whl from the Assets below
+          uv tool install ./kiss-${VERSION_NO_V}-py3-none-any.whl
+          \`\`\`
+
+          Verify artifact integrity against \`SHA256SUMS\`:
+
+          \`\`\`bash
+          sha256sum -c SHA256SUMS
+          \`\`\`
+
+          The wheel bundles every template, preset, extension, workflow, and support
+          script shipped with kiss, so \`kiss init\` and \`kiss upgrade\` run fully
+          offline after install.
+
+          NOTES_EOF
+
+          echo "## What's Changed" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "$COMMITS" >> release_notes.md
+
+      - name: Create GitHub Release
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          VERSION_NO_V="${{ steps.version.outputs.no_v }}"
+          gh release create "$VERSION" \
+            --title "kiss - $VERSION_NO_V" \
+            --notes-file release_notes.md \
+            dist/*.whl \
+            dist/*.tar.gz \
+            dist/SHA256SUMS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

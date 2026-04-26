@@ -1,0 +1,20 @@
+{
+  "title": "Service overview (starter)",
+  "panels": [
+    {
+      "title": "Request rate",
+      "type": "timeseries",
+      "query": "sum(rate(http_requests_total[1m])) by (endpoint)"
+    },
+    {
+      "title": "Error rate",
+      "type": "timeseries",
+      "query": "sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))"
+    },
+    {
+      "title": "p95 latency",
+      "type": "timeseries",
+      "query": "histogram_quantile(0.95, sum(rate(request_duration_seconds_bucket[5m])) by (le, endpoint))"
+    }
+  ]
+}

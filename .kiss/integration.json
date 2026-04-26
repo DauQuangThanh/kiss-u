@@ -1,0 +1,7 @@
+{
+  "integration": "claude",
+  "integrations": [
+    "claude"
+  ],
+  "version": "0.3.0"
+}

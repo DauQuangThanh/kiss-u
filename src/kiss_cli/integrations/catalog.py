@@ -1,0 +1,511 @@
+"""Integration catalog — discovery, validation, and upgrade support.
+
+Provides:
+- ``IntegrationCatalogEntry`` — single catalog source metadata.
+- ``IntegrationCatalog``      — fetches, caches, and searches integration
+  catalogs (built-in + community).
+- ``IntegrationDescriptor``   — loads and validates ``integration.yml``.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import os
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import yaml
+from packaging import version as pkg_version
+
+
+# ---------------------------------------------------------------------------
+# Errors
+# ---------------------------------------------------------------------------
+
+class IntegrationCatalogError(Exception):
+    """Raised when a catalog operation fails."""
+
+
+class IntegrationDescriptorError(Exception):
+    """Raised when an integration.yml descriptor is invalid."""
+
+
+# ---------------------------------------------------------------------------
+# IntegrationCatalogEntry
+# ---------------------------------------------------------------------------
+
+@dataclass
+class IntegrationCatalogEntry:
+    """Represents a single catalog source in the catalog stack."""
+
+    url: str
+    name: str
+    priority: int
+    install_allowed: bool
+    description: str = ""
+
+
+# ---------------------------------------------------------------------------
+# IntegrationCatalog
+# ---------------------------------------------------------------------------
+
+class IntegrationCatalog:
+    """Manages integration catalog fetching, caching, and searching."""
+
+    # kiss is offline-only (Phase 4): only a single bundled catalog is used.
+    from .._bundled_catalogs import BUNDLED_CATALOG_URL as _BUNDLED_URL
+    DEFAULT_CATALOG_URL = _BUNDLED_URL
+    CACHE_DURATION = 3600  # retained for API compatibility
+
+    def __init__(self, project_root: Path) -> None:
+        self.project_root = project_root
+        self.cache_dir = project_root / ".kiss" / "integrations" / ".cache"
+
+    # -- URL validation ---------------------------------------------------
+
+    @staticmethod
+    def _validate_catalog_url(url: str) -> None:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(url)
+        is_localhost = parsed.hostname in ("localhost", "127.0.0.1", "::1")
+        if parsed.scheme != "https" and not (parsed.scheme == "http" and is_localhost):
+            raise IntegrationCatalogError(
+                f"Catalog URL must use HTTPS (got {parsed.scheme}://). "
+                "HTTP is only allowed for localhost."
+            )
+        if not parsed.netloc:
+            raise IntegrationCatalogError(
+                "Catalog URL must be a valid URL with a host."
+            )
+
+    # -- Catalog stack ----------------------------------------------------
+
+    def _load_catalog_config(
+        self, config_path: Path
+    ) -> Optional[List[IntegrationCatalogEntry]]:
+        """Load catalog stack from a YAML file.
+
+        Returns None when the file does not exist.
+
+        Raises:
+            IntegrationCatalogError: on invalid content
+        """
+        if not config_path.exists():
+            return None
+        try:
+            data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        except (yaml.YAMLError, OSError, UnicodeError) as exc:
+            raise IntegrationCatalogError(
+                f"Failed to read catalog config {config_path}: {exc}"
+            )
+        if not isinstance(data, dict):
+            raise IntegrationCatalogError(
+                f"Invalid catalog config {config_path}: expected a YAML mapping at the root"
+            )
+        catalogs_data = data.get("catalogs", [])
+        if not isinstance(catalogs_data, list):
+            raise IntegrationCatalogError(
+                f"Invalid catalog config: 'catalogs' must be a list, "
+                f"got {type(catalogs_data).__name__}"
+            )
+        if not catalogs_data:
+            raise IntegrationCatalogError(
+                f"Catalog config {config_path} exists but contains no 'catalogs' entries. "
+                f"Remove the file to use built-in defaults, or add valid catalog entries."
+            )
+        entries: List[IntegrationCatalogEntry] = []
+        skipped: List[int] = []
+        for idx, item in enumerate(catalogs_data):
+            if not isinstance(item, dict):
+                raise IntegrationCatalogError(
+                    f"Invalid catalog entry at index {idx}: "
+                    f"expected a mapping, got {type(item).__name__}"
+                )
+            url = str(item.get("url", "")).strip()
+            if not url:
+                skipped.append(idx)
+                continue
+            self._validate_catalog_url(url)
+            try:
+                priority = int(item.get("priority", idx + 1))
+            except (TypeError, ValueError):
+                raise IntegrationCatalogError(
+                    f"Invalid priority for catalog '{item.get('name', idx + 1)}': "
+                    f"expected integer, got {item.get('priority')!r}"
+                )
+            raw_install = item.get("install_allowed", False)
+            if isinstance(raw_install, str):
+                install_allowed = raw_install.strip().lower() in ("true", "yes", "1")
+            else:
+                install_allowed = bool(raw_install)
+            entries.append(
+                IntegrationCatalogEntry(
+                    url=url,
+                    name=str(item.get("name", f"catalog-{idx + 1}")),
+                    priority=priority,
+                    install_allowed=install_allowed,
+                    description=str(item.get("description", "")),
+                )
+            )
+        entries.sort(key=lambda e: e.priority)
+        if not entries:
+            raise IntegrationCatalogError(
+                f"Catalog config {config_path} contains {len(catalogs_data)} "
+                f"entries but none have valid URLs (entries at indices {skipped} "
+                f"were skipped). Each catalog entry must have a 'url' field."
+            )
+        return entries
+
+    def get_active_catalogs(self) -> List[IntegrationCatalogEntry]:
+        """Return the sole active catalog — the one bundled with kiss.
+
+        kiss is offline-only (Phase 4): env-var overrides and
+        ``integration-catalogs.yml`` files are ignored.
+        """
+        return [
+            IntegrationCatalogEntry(
+                url=self.DEFAULT_CATALOG_URL,
+                name="bundled",
+                priority=1,
+                install_allowed=True,
+                description="Built-in catalog of bundled integrations",
+            ),
+        ]
+
+    # -- Fetching ---------------------------------------------------------
+
+    def _fetch_single_catalog(
+        self,
+        entry: IntegrationCatalogEntry,
+        force_refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """Return the bundled integration catalog data.
+
+        kiss is offline-only: this method ignores *entry.url* and
+        *force_refresh* and reads only the bundled ``catalog.json``.
+        """
+        from .._bundled_catalogs import load_bundled_catalog
+        return load_bundled_catalog("integrations")
+
+    def _get_merged_integrations(
+        self, force_refresh: bool = False
+    ) -> List[Dict[str, Any]]:
+        """Fetch and merge integrations from all active catalogs.
+
+        Catalogs are processed in the order returned by
+        :meth:`get_active_catalogs`.  On conflicts, the first catalog in that
+        order wins (lower numeric priority = higher precedence).  Each dict is
+        annotated with ``_catalog_name`` and ``_install_allowed``.
+        """
+        import sys
+
+        active = self.get_active_catalogs()
+        merged: Dict[str, Dict[str, Any]] = {}
+        any_success = False
+
+        for entry in active:
+            try:
+                data = self._fetch_single_catalog(entry, force_refresh)
+                any_success = True
+            except IntegrationCatalogError as exc:
+                print(
+                    f"Warning: Could not fetch catalog '{entry.name}': {exc}",
+                    file=sys.stderr,
+                )
+                continue
+
+            for integ_id, integ_data in data.get("integrations", {}).items():
+                if not isinstance(integ_data, dict):
+                    continue
+                if integ_id not in merged:
+                    merged[integ_id] = {
+                        **integ_data,
+                        "id": integ_id,
+                        "_catalog_name": entry.name,
+                        "_install_allowed": entry.install_allowed,
+                    }
+
+        if not any_success and active:
+            raise IntegrationCatalogError(
+                "Failed to fetch any integration catalog"
+            )
+
+        return list(merged.values())
+
+    # -- Search / info ----------------------------------------------------
+
+    def search(
+        self,
+        query: Optional[str] = None,
+        tag: Optional[str] = None,
+        author: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Search catalogs for integrations matching the given filters."""
+        results: List[Dict[str, Any]] = []
+        for item in self._get_merged_integrations():
+            author_val = item.get("author", "")
+            if not isinstance(author_val, str):
+                author_val = str(author_val) if author_val is not None else ""
+            if author and author_val.lower() != author.lower():
+                continue
+            if tag:
+                raw_tags = item.get("tags", [])
+                tags_list = raw_tags if isinstance(raw_tags, list) else []
+                if tag.lower() not in [t.lower() for t in tags_list if isinstance(t, str)]:
+                    continue
+            if query:
+                raw_tags = item.get("tags", [])
+                tags_list = raw_tags if isinstance(raw_tags, list) else []
+                name_val = item.get("name", "")
+                desc_val = item.get("description", "")
+                id_val = item.get("id", "")
+                haystack = " ".join(
+                    [
+                        str(name_val) if name_val else "",
+                        str(desc_val) if desc_val else "",
+                        str(id_val) if id_val else "",
+                    ]
+                    + [t for t in tags_list if isinstance(t, str)]
+                ).lower()
+                if query.lower() not in haystack:
+                    continue
+            results.append(item)
+        return results
+
+    def get_integration_info(
+        self, integration_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Return catalog metadata for a single integration, or None."""
+        for item in self._get_merged_integrations():
+            if item["id"] == integration_id:
+                return item
+        return None
+
+    # -- Cache management -------------------------------------------------
+
+    def clear_cache(self) -> None:
+        """Remove all cached catalog files."""
+        if self.cache_dir.exists():
+            for pattern in ("catalog-*.json", "catalog-*-metadata.json"):
+                for f in self.cache_dir.glob(pattern):
+                    f.unlink(missing_ok=True)
+
+
+# ---------------------------------------------------------------------------
+# IntegrationDescriptor  (integration.yml)
+# ---------------------------------------------------------------------------
+
+class IntegrationDescriptor:
+    """Loads and validates an ``integration.yml`` descriptor.
+
+    The descriptor mirrors ``extension.yml`` and ``preset.yml``::
+
+        schema_version: "1.0"
+        integration:
+          id: "my-agent"
+          name: "My Agent"
+          version: "1.0.0"
+          description: "Integration for My Agent"
+          author: "my-org"
+        requires:
+          kiss_version: ">=0.6.0"
+          tools: [...]
+        provides:
+          commands: [...]
+          scripts: [...]
+    """
+
+    SCHEMA_VERSION = "1.0"
+    REQUIRED_TOP_LEVEL = ["schema_version", "integration", "requires", "provides"]
+
+    def __init__(self, descriptor_path: Path) -> None:
+        self.path = descriptor_path
+        self.data = self._load(descriptor_path)
+        self._validate()
+
+    # -- Loading ----------------------------------------------------------
+
+    @staticmethod
+    def _load(path: Path) -> dict:
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                return yaml.safe_load(fh) or {}
+        except yaml.YAMLError as exc:
+            raise IntegrationDescriptorError(f"Invalid YAML in {path}: {exc}")
+        except FileNotFoundError:
+            raise IntegrationDescriptorError(f"Descriptor not found: {path}")
+        except (OSError, UnicodeError) as exc:
+            raise IntegrationDescriptorError(
+                f"Unable to read descriptor {path}: {exc}"
+            )
+
+    # -- Validation -------------------------------------------------------
+
+    def _validate(self) -> None:
+        if not isinstance(self.data, dict):
+            raise IntegrationDescriptorError(
+                f"Descriptor root must be a YAML mapping, got {type(self.data).__name__}"
+            )
+        for field in self.REQUIRED_TOP_LEVEL:
+            if field not in self.data:
+                raise IntegrationDescriptorError(
+                    f"Missing required field: {field}"
+                )
+
+        if self.data["schema_version"] != self.SCHEMA_VERSION:
+            raise IntegrationDescriptorError(
+                f"Unsupported schema version: {self.data['schema_version']} "
+                f"(expected {self.SCHEMA_VERSION})"
+            )
+
+        integ = self.data["integration"]
+        if not isinstance(integ, dict):
+            raise IntegrationDescriptorError(
+                "'integration' must be a mapping"
+            )
+        for field in ("id", "name", "version", "description"):
+            if field not in integ:
+                raise IntegrationDescriptorError(
+                    f"Missing integration.{field}"
+                )
+            if not isinstance(integ[field], str):
+                raise IntegrationDescriptorError(
+                    f"integration.{field} must be a string, got {type(integ[field]).__name__}"
+                )
+
+        if not re.match(r"^[a-z0-9-]+$", integ["id"]):
+            raise IntegrationDescriptorError(
+                f"Invalid integration ID '{integ['id']}': "
+                "must be lowercase alphanumeric with hyphens only"
+            )
+
+        try:
+            pkg_version.Version(integ["version"])
+        except (pkg_version.InvalidVersion, TypeError):
+            raise IntegrationDescriptorError(
+                f"Invalid version '{integ['version']}'"
+            )
+
+        requires = self.data["requires"]
+        if not isinstance(requires, dict):
+            raise IntegrationDescriptorError(
+                "'requires' must be a mapping"
+            )
+        if "kiss_version" not in requires:
+            raise IntegrationDescriptorError(
+                "Missing requires.kiss_version"
+            )
+        if not isinstance(requires["kiss_version"], str) or not requires["kiss_version"].strip():
+            raise IntegrationDescriptorError(
+                "requires.kiss_version must be a non-empty string"
+            )
+        tools = requires.get("tools")
+        if tools is not None:
+            if not isinstance(tools, list):
+                raise IntegrationDescriptorError(
+                    "requires.tools must be a list"
+                )
+            for tool in tools:
+                if not isinstance(tool, dict):
+                    raise IntegrationDescriptorError(
+                        "Each requires.tools entry must be a mapping"
+                    )
+                tool_name = tool.get("name")
+                if not isinstance(tool_name, str) or not tool_name.strip():
+                    raise IntegrationDescriptorError(
+                        "requires.tools entry 'name' must be a non-empty string"
+                    )
+
+        provides = self.data["provides"]
+        if not isinstance(provides, dict):
+            raise IntegrationDescriptorError(
+                "'provides' must be a mapping"
+            )
+        commands = provides.get("commands", [])
+        scripts = provides.get("scripts", [])
+        if "commands" in provides and not isinstance(commands, list):
+            raise IntegrationDescriptorError(
+                "Invalid provides.commands: expected a list"
+            )
+        if "scripts" in provides and not isinstance(scripts, list):
+            raise IntegrationDescriptorError(
+                "Invalid provides.scripts: expected a list"
+            )
+        if not commands and not scripts:
+            raise IntegrationDescriptorError(
+                "Integration must provide at least one command or script"
+            )
+        for cmd in commands:
+            if not isinstance(cmd, dict):
+                raise IntegrationDescriptorError(
+                    "Each command entry must be a mapping"
+                )
+            if "name" not in cmd or "file" not in cmd:
+                raise IntegrationDescriptorError(
+                    "Command entry missing 'name' or 'file'"
+                )
+            cmd_name = cmd["name"]
+            cmd_file = cmd["file"]
+            if not isinstance(cmd_name, str) or not cmd_name.strip():
+                raise IntegrationDescriptorError(
+                    "Command entry 'name' must be a non-empty string"
+                )
+            if not isinstance(cmd_file, str) or not cmd_file.strip():
+                raise IntegrationDescriptorError(
+                    "Command entry 'file' must be a non-empty string"
+                )
+            if os.path.isabs(cmd_file) or ".." in Path(cmd_file).parts or Path(cmd_file).drive or Path(cmd_file).anchor:
+                raise IntegrationDescriptorError(
+                    f"Command entry 'file' must be a relative path without '..': {cmd_file}"
+                )
+        for script_entry in scripts:
+            if not isinstance(script_entry, str) or not script_entry.strip():
+                raise IntegrationDescriptorError(
+                    "Script entry must be a non-empty string"
+                )
+            if os.path.isabs(script_entry) or ".." in Path(script_entry).parts or Path(script_entry).drive or Path(script_entry).anchor:
+                raise IntegrationDescriptorError(
+                    f"Script entry must be a relative path without '..': {script_entry}"
+                )
+
+    # -- Property accessors -----------------------------------------------
+
+    @property
+    def id(self) -> str:
+        return self.data["integration"]["id"]
+
+    @property
+    def name(self) -> str:
+        return self.data["integration"]["name"]
+
+    @property
+    def version(self) -> str:
+        return self.data["integration"]["version"]
+
+    @property
+    def description(self) -> str:
+        return self.data["integration"]["description"]
+
+    @property
+    def requires_kiss_version(self) -> str:
+        return self.data["requires"]["kiss_version"]
+
+    @property
+    def commands(self) -> List[Dict[str, Any]]:
+        return self.data.get("provides", {}).get("commands", [])
+
+    @property
+    def scripts(self) -> List[str]:
+        return self.data.get("provides", {}).get("scripts", [])
+
+    @property
+    def tools(self) -> List[Dict[str, Any]]:
+        return self.data.get("requires", {}).get("tools") or []
+
+    def get_hash(self) -> str:
+        """SHA-256 hash of the descriptor file."""
+        with open(self.path, "rb") as fh:
+            return f"sha256:{hashlib.sha256(fh.read()).hexdigest()}"

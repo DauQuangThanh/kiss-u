@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+# build/ also holds kiss's build-time asset staging tree
+# (build/core_pack/), regenerated on every `uv build` from the
+# repo-root agent-skills/, presets/, extensions/, workflows/, and
+# integrations/ trees and mapped into the wheel as kiss_cli/core_pack/
+# via force-include in pyproject.toml. Never commit these.
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache
+.ruff_cache
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+*.tmp
+
+# Project specific
+*.log
+.env
+.env.local
+*.lock
+
+# kiss-specific files
+.genreleases/
+*.zip
+sdd-*/
+docs/dev
+
+# Extension system
+.kiss/extensions/.cache/
+.kiss/extensions/.backup/
+.kiss/extensions/*/local-config.yml

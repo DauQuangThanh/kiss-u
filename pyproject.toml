@@ -1,0 +1,105 @@
+[project]
+name = "kiss"
+version = "0.3.0"
+description = "KISS — a tool to bootstrap your projects for Spec-Driven Development (SDD) with reusable AI components."
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.24.2",
+    "click>=8.3.3",
+    "rich",
+    "platformdirs",
+    "readchar",
+    "pyyaml>=6.0",
+    "packaging>=26.1",
+    "pathspec>=1.1.0",
+    "json5>=0.14.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/DauQuangThanh/kiss-u"
+Repository = "https://github.com/DauQuangThanh/kiss-u"
+
+[project.scripts]
+kiss = "kiss_cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.hooks.custom]
+path = "scripts/hatch_build_hooks.py"
+
+[tool.hatch.build.targets.wheel]
+# scripts/hatch_build_hooks.py stages the full asset tree (every preset,
+# extension, workflow, agent-skill, and support script) into
+# build/core_pack/ right before packaging. The force-include mapping
+# below tells hatchling to copy that staged tree into the wheel under
+# kiss_cli/core_pack/ — enabling a fully offline `kiss init` without
+# polluting the source tree under src/kiss_cli/.
+packages = ["src/kiss_cli"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"build/core_pack" = "kiss_cli/core_pack"
+
+[tool.hatch.build.targets.sdist]
+# Ship the repo-root asset sources in the sdist too so that building a
+# wheel from the sdist produces the same bundled core_pack as building
+# directly from a git checkout.
+include = [
+    "src/kiss_cli",
+    "scripts",
+    "agent-skills",
+    "subagents",
+    "presets",
+    "extensions",
+    "workflows",
+    "integrations/catalog.json",
+    "integrations/README.md",
+    "integrations/CONTRIBUTING.md",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "pyproject.toml",
+]
+exclude = [
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/.DS_Store",
+    "**/*.pyc",
+    "build",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "skills-ref>=0.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+
+[dependency-groups]
+dev = []
+

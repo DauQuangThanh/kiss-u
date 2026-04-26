@@ -1,0 +1,50 @@
+schema_version: "1.0"
+
+preset:
+  id: "lean"
+  name: "Lean Workflow"
+  version: "1.0.0"
+  description: "Minimal core workflow commands - just the prompt, just the artifact"
+  author: "github"
+  repository: "https://github.com/DauQuangThanh/kiss-u"
+  license: "MIT"
+
+requires:
+  kiss_version: ">=0.6.0"
+
+provides:
+  templates:
+    - type: "command"
+      name: "kiss.specify"
+      file: "commands/kiss.specify.md"
+      description: "Lean specify - create spec.md from a feature description"
+      replaces: "kiss.specify"
+
+    - type: "command"
+      name: "kiss.plan"
+      file: "commands/kiss.plan.md"
+      description: "Lean plan - create plan.md from the spec"
+      replaces: "kiss.plan"
+
+    - type: "command"
+      name: "kiss.taskify"
+      file: "commands/kiss.taskify.md"
+      description: "Lean taskify - create tasks.md from plan and spec"
+      replaces: "kiss.taskify"
+
+    - type: "command"
+      name: "kiss.implement"
+      file: "commands/kiss.implement.md"
+      description: "Lean implement - execute tasks from tasks.md"
+      replaces: "kiss.implement"
+
+    - type: "command"
+      name: "kiss.standardize"
+      file: "commands/kiss.standardize.md"
+      description: "Lean standardize - create or update project standards"
+      replaces: "kiss.standardize"
+
+tags:
+  - "lean"
+  - "minimal"
+  - "workflow"

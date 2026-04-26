@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-04-26T00:00:00Z",
+  "integrations": {
+    "claude": {
+      "id": "claude",
+      "name": "Claude Code",
+      "version": "1.0.0",
+      "description": "Anthropic Claude Code CLI integration",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "tags": ["cli", "anthropic"]
+    },
+    "copilot": {
+      "id": "copilot",
+      "name": "GitHub Copilot",
+      "version": "1.0.0",
+      "description": "GitHub Copilot VS Code IDE integration",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "tags": ["ide", "github"]
+    },
+    "cursor-agent": {
+      "id": "cursor-agent",
+      "name": "Cursor Agent",
+      "version": "1.0.0",
+      "description": "Cursor IDE integration",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "tags": ["ide"]
+    },
+    "opencode": {
+      "id": "opencode",
+      "name": "OpenCode",
+      "version": "1.0.0",
+      "description": "OpenCode CLI integration",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "tags": ["cli"]
+    },
+    "windsurf": {
+      "id": "windsurf",
+      "name": "Windsurf",
+      "version": "1.0.0",
+      "description": "Windsurf IDE workflow integration",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "tags": ["ide"]
+    },
+    "gemini": {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "version": "1.0.0",
+      "description": "Google Gemini CLI integration",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "tags": ["cli", "google"]
+    },
+    "codex": {
+      "id": "codex",
+      "name": "Codex CLI",
+      "version": "1.0.0",
+      "description": "OpenAI Codex CLI skills-based integration",
+      "author": "Dau Quang Thanh",
+      "repository": "https://github.com/DauQuangThanh/kiss-u",
+      "tags": ["cli", "skills"]
+    }
+  }
+}
