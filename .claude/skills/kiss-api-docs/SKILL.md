@@ -1,6 +1,6 @@
 ---
 name: "kiss-api-docs"
-description: "Generate API documentation from source code: list endpoints / RPC methods / queue topics with their schemas and auth. Works backward from routes + OpenAPI / proto / gql definitions."
+description: "Generates API documentation from source code: lists endpoints / RPC methods / queue topics with their schemas and auth. Works backward from routes + OpenAPI / proto / gql definitions. Use when documenting an API, generating endpoint reference docs, or when the project needs OpenAPI, gRPC, or GraphQL schemas documented."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

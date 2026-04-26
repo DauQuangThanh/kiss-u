@@ -1,6 +1,6 @@
 ---
 name: "kiss-plan"
-description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
+description: "Executes the implementation planning workflow using the plan template to generate design artefacts. Use when creating an implementation plan for a feature, breaking down architecture into actionable design documents, or before running kiss-taskify."
 argument-hint: "Optional guidance for the planning phase"
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:

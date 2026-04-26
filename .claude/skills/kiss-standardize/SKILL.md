@@ -1,6 +1,6 @@
 ---
 name: "kiss-standardize"
-description: "Create or update the project standards from interactive or provided principle inputs, ensuring all dependent templates stay in sync."
+description: "Creates or updates the project standards from interactive or provided principle inputs, ensuring all dependent templates stay in sync. Use when defining coding standards, setting project conventions, or establishing style guidelines for a new or existing project."
 argument-hint: "Principles or values for project standards"
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:

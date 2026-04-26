@@ -1,8 +1,7 @@
 ---
 name: technical-analyst
-description: Senior technical analyst specializing in reverse engineering and code archaeology. Use proactively for any existing software project that needs documentation generated from source code. Invoke when the user wants to reverse-engineer a codebase to produce architecture diagrams, API documentation, data model diagrams, dependency maps, or comprehensive project documentation from existing code. This agent works BACKWARD from code to documentation — the opposite direction of other agents. It scans source files, configuration, and infrastructure artifacts to reconstruct the project's technical story. Ideal for onboarding new team members, legacy modernization, compliance audits, or knowledge transfer. Audience: senior engineers, architects, technical writers doing code archaeology.
-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch
-model: inherit
+description: Use proactively when the user needs documentation generated from an existing codebase. Invoke when the user wants to reverse-engineer source code into architecture diagrams, API docs, data model diagrams, or dependency maps.
+tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch
 color: cyan
 ---
 

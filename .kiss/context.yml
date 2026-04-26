@@ -42,19 +42,19 @@ paths:
 current:
   # Human-readable name of the feature currently being developed.
   # Example: "user-authentication"
-  feature: narrow-to-seven-ais
+  feature: null
 
   # Path (relative to project root) of the active spec file.
   # Example: docs/specs/user-authentication.md
-  spec: specs/004-narrow-to-seven-ais/spec.md
+  spec: null
 
   # Path (relative to project root) of the active plan file.
   # Example: docs/plans/user-authentication.md
-  plan: specs/004-narrow-to-seven-ais/plan.md
+  plan: null
 
   # Path (relative to project root) of the active tasks list file.
   # Example: docs/tasks/user-authentication/tasks.md
-  tasks: docs/tasks/narrow-to-seven-ais/tasks.md
+  tasks: null
 
   # Path (relative to project root) of the active checklist file.
   # Example: docs/tasks/user-authentication/checklist.md
@@ -110,3 +110,4 @@ language:
 # ---------------------------------------------------------------------------
 integrations:
   - claude
+  - copilot

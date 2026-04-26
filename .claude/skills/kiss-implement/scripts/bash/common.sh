@@ -367,6 +367,13 @@ except Exception:
     local core="$base/${template_name}.md"
     [ -f "$core" ] && echo "$core" && return 0
 
+
+
+    # Priority 5: Skill's own bundled templates (self-contained fallback)
+    if [ -n "${SCRIPT_DIR:-}" ]; then
+        local skill_tpl="$SCRIPT_DIR/../../templates/${template_name}.md"
+        [ -f "$skill_tpl" ] && echo "$skill_tpl" && return 0
+    fi
     # Template not found in any location.
     # Return 1 so callers can distinguish "not found" from "found".
     # Callers running under set -e should use: TEMPLATE=$(resolve_template ...) || true

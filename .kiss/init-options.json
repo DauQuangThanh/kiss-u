@@ -5,7 +5,8 @@
   "here": true,
   "integration": "claude",
   "integrations": [
-    "claude"
+    "claude",
+    "copilot"
   ],
   "kiss_version": "0.3.0"
 }

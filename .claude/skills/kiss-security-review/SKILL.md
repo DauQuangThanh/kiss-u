@@ -1,6 +1,6 @@
 ---
 name: "kiss-security-review"
-description: "Review a feature's code + config against OWASP Top 10:2025 and common CWE patterns. Produces a per-feature security review with findings, severity, and remediation outlines. Does not deploy, does not write exploits, does not modify code."
+description: "Reviews a feature's code + config against OWASP Top 10:2025 and common CWE patterns. Produces a per-feature security review with findings, severity, and remediation outlines. Does not deploy, write exploits, or modify code. Use when reviewing security posture, checking for OWASP vulnerabilities, or performing a pre-release security audit."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

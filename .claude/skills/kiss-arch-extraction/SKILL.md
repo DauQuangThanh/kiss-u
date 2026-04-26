@@ -1,6 +1,6 @@
 ---
 name: "kiss-arch-extraction"
-description: "Extract architecture from an existing codebase — containers, components, data flow, external dependencies. Produces an architecture doc that can seed new ADRs and C4 diagrams."
+description: "Extracts architecture from an existing codebase — containers, components, data flow, external dependencies. Produces an architecture doc that can seed new ADRs and C4 diagrams. Use when reverse-engineering a codebase, onboarding to a new project, or when architecture documentation needs to be generated from existing code."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

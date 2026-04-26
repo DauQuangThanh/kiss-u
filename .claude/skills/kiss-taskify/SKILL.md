@@ -1,6 +1,6 @@
 ---
 name: "kiss-taskify"
-description: "Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts."
+description: "Generates an actionable, dependency-ordered tasks.md for the feature based on available design artefacts. Use when breaking down a feature into implementation tasks, creating tasks.md from a plan or design doc, or before running kiss-implement."
 argument-hint: "Optional task generation constraints"
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:

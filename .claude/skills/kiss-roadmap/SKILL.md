@@ -1,6 +1,6 @@
 ---
 name: "kiss-roadmap"
-description: "Draft a product roadmap grouping backlog items into release windows (Now / Next / Later or date-based). The AI proposes windows from the backlog's priority order; the user (product-owner) confirms. Does not commit a team to a delivery date."
+description: "Drafts a product roadmap grouping backlog items into release windows (Now / Next / Later or date-based). Proposes windows from the backlog's priority order; the user (product-owner) confirms. Does not commit a team to a delivery date. Use when planning product direction, grouping features into releases, or creating a Now / Next / Later roadmap view."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"
@@ -59,7 +59,7 @@ Does not mutate `.kiss/context.yml`.
 
 ## Handoffs
 
-- `kiss-pm-planning` references the roadmap's release windows when
+- `kiss-project-planning` references the roadmap's release windows when
   drafting the milestones table.
 - `kiss-status-report` references the next-window items when
   listing "Planned activities next period".

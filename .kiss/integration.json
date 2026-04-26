@@ -1,7 +1,8 @@
 {
   "integration": "claude",
   "integrations": [
-    "claude"
+    "claude",
+    "copilot"
   ],
   "version": "0.3.0"
 }

@@ -1,6 +1,6 @@
 ---
 name: "kiss-sprint-planning"
-description: "Draft a sprint plan — sprint goal, candidate backlog items, capacity arithmetic, and risk flags — from the backlog + a user-provided velocity. The AI prepares the artefact; the team owns the commitment. Does not facilitate a planning meeting."
+description: "Drafts a sprint plan — sprint goal, candidate backlog items, capacity arithmetic, and risk flags — from the backlog + a user-provided velocity. Prepares the artefact; the team owns the commitment. Does not facilitate a planning meeting. Use when planning a sprint, selecting backlog items for a sprint, or calculating team capacity."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

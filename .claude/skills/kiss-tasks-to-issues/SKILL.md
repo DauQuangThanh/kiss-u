@@ -1,6 +1,6 @@
 ---
 name: "kiss-tasks-to-issues"
-description: "Convert existing tasks into actionable, dependency-ordered GitHub issues for the feature based on available design artifacts."
+description: "Converts existing tasks into actionable, dependency-ordered GitHub issues for the feature based on available design artefacts. Use when creating GitHub issues from tasks.md, exporting tasks to a GitHub project board, or when the team tracks work in GitHub Issues."
 argument-hint: "Optional filter or label for GitHub issues"
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:

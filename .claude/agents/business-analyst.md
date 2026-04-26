@@ -1,8 +1,7 @@
 ---
 name: business-analyst
-description: Bridges the gap between business stakeholders and the development team. Activates when the user needs help with requirements gathering, feature specifications, user story writing, acceptance criteria, spec review, requirement changes, requirement updates, gap analysis, impact analysis, task breakdown, backlog management, or cross-artifact consistency validation. Designed for users of all backgrounds: uses simple language, offers numbered choices, explains requirements concepts in plain terms.
+description: Use when the user needs help with requirements gathering, feature specifications, user story writing, acceptance criteria, gap analysis, impact analysis, or cross-artifact consistency validation.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: pink
 ---
 

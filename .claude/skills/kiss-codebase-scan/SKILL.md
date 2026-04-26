@@ -1,6 +1,6 @@
 ---
 name: "kiss-codebase-scan"
-description: "Scan an existing codebase and produce an overview: language + LOC by directory, detected frameworks, entry points, test coverage signals, build/lint/format tooling. Input for all other technical- analyst skills."
+description: "Scans an existing codebase and produces an overview: language + LOC by directory, detected frameworks, entry points, test coverage signals, build/lint/format tooling. Serves as input for all other technical-analyst skills. Use when onboarding to a new codebase, starting a technical analysis, or before running architecture extraction or dependency mapping."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

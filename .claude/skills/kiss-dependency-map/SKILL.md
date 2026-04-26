@@ -1,6 +1,6 @@
 ---
 name: "kiss-dependency-map"
-description: "Render the project's internal module-dependency graph + external dependency list as a Mermaid diagram. Works from imports + the lockfile produced by kiss-codebase-scan."
+description: "Renders the project's internal module-dependency graph + external dependency list as a Mermaid diagram. Works from imports + the lockfile produced by kiss-codebase-scan. Use when visualising module dependencies, understanding code structure, or identifying circular dependencies and coupling."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

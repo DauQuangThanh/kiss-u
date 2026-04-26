@@ -1,6 +1,6 @@
 ---
 name: "kiss-containerization"
-description: "Draft Dockerfile / compose / image-build strategy for the project. Produces a multi-stage Dockerfile starter, a compose file for local dev, and the design doc. Does not build or push images."
+description: "Drafts Dockerfile / compose / image-build strategy for the project. Produces a multi-stage Dockerfile starter, a compose file for local dev, and the design doc. Does not build or push images. Use when dockerising an application, planning a container strategy, or when the project needs Docker or Docker Compose configuration."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

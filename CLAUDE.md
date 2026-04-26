@@ -123,5 +123,4 @@ but do not print out the contents of `.kiss/context.yml`.
 
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `specs/004-narrow-to-seven-ais/plan.md`.
 <!-- KISS END -->

@@ -1,6 +1,6 @@
 ---
 name: "kiss-quality-gates"
-description: "Define quality gates (coverage thresholds, lint / type / security scan pass criteria, performance budgets) that every PR and every release must pass. Produces a gate definition the CI pipeline enforces. Does not enforce them itself."
+description: "Defines quality gates (coverage thresholds, lint / type / security scan pass criteria, performance budgets) that every PR and every release must pass. Produces a gate definition the CI pipeline enforces. Does not enforce them itself. Use when defining quality requirements, setting CI/CD thresholds, or establishing pass/fail criteria for PRs and releases."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

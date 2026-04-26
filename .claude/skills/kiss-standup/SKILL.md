@@ -1,6 +1,6 @@
 ---
 name: "kiss-standup"
-description: "Log daily standup notes from content the user pastes in. Extracts blockers into a tracked impediments list. Does NOT facilitate the standup — the team runs the meeting and tells the AI what happened."
+description: "Logs daily standup notes from content the user pastes in. Extracts blockers into a tracked impediments list. Does NOT facilitate the standup — the team runs the meeting and tells the AI what happened. Use when recording daily standup notes, tracking impediments, or logging what each team member did yesterday / today / blocked on."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

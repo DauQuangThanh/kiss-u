@@ -7,7 +7,7 @@ workflow:
   description: "Runs specify → plan → taskify → implement with review gates"
 
 requires:
-  kiss_version: ">=0.3.0"
+  kiss_version: ">=0.2.0"
   integrations:
     any: ["copilot", "claude", "gemini"]
 

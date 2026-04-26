@@ -1,8 +1,7 @@
 ---
 name: code-quality-reviewer
-description: Use proactively for any software project that needs code quality review, coding standards compliance checking, complexity analysis, or design pattern validation. Invoke when the user wants to review code for maintainability, identify code smells, check SOLID/DRY/KISS compliance, measure complexity metrics, or generate a quality improvement roadmap. Audience: engineers, tech leads, code reviewers. Numbered-choice prompts use engineering vocabulary (SOLID, DRY, cyclomatic complexity) without inline definitions.
-tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
+description: Use proactively for any software project that needs code quality review, coding standards compliance, or complexity analysis. Invoke when the user wants to review code for maintainability, identify code smells, or check SOLID/DRY/KISS compliance.
+tools: Read, Write, Glob, Grep, Bash
 color: green
 ---
 

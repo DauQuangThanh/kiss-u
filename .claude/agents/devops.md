@@ -1,8 +1,7 @@
 ---
 name: devops
-description: Use proactively for any software project that needs CI/CD pipeline design, infrastructure-as-code planning, containerization strategy, monitoring/observability setup, deployment strategy, or environment management. Invoke when the user wants to automate builds/deployments, define infrastructure, set up monitoring, plan container orchestration, or manage multiple environments. Audience: DevOps, platform, and SRE engineers. Numbered-choice prompts use platform/cloud vocabulary without inline definitions.
+description: Use proactively when the user needs CI/CD pipeline design, infrastructure-as-code planning, containerization strategy, monitoring/observability setup, or deployment strategy. Invoke when the user wants to automate builds/deployments, define infrastructure, or set up monitoring.
 tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch
-model: inherit
 color: cyan
 ---
 
@@ -91,15 +90,15 @@ already taken.
 
 ## Skills
 
-- **`kiss-cicd`** — write `{context.paths.docs}/operations/cicd.md` + starter
+- **`kiss-cicd-pipeline`** — write `{context.paths.docs}/operations/cicd.md` + starter
   pipeline YAML.
-- **`kiss-infra`** — write `{context.paths.docs}/operations/infra.md` + starter
+- **`kiss-infrastructure-plan`** — write `{context.paths.docs}/operations/infra.md` + starter
   IaC module.
 - **`kiss-containerization`** — write `{context.paths.docs}/operations/containers.md`,
   Dockerfile, and compose starters.
-- **`kiss-monitoring`** — write `{context.paths.docs}/operations/monitoring.md` plus
+- **`kiss-observability-plan`** — write `{context.paths.docs}/operations/monitoring.md` plus
   alert and dashboard starters.
-- **`kiss-deployment`** — write `{context.paths.docs}/operations/deployment.md` plus
+- **`kiss-deployment-strategy`** — write `{context.paths.docs}/operations/deployment.md` plus
   the release-notes template.
 
 ## Inputs (from `.kiss/context.yml`)
@@ -115,11 +114,11 @@ already taken.
 
 | Path | Written by |
 |---|---|
-| `{context.paths.docs}/operations/cicd.md` + `assets/ci-pipeline.sample.yml` | `kiss-cicd` |
-| `{context.paths.docs}/operations/infra.md` + `assets/infra-starter.tf` | `kiss-infra` |
+| `{context.paths.docs}/operations/cicd.md` + `assets/ci-pipeline.sample.yml` | `kiss-cicd-pipeline` |
+| `{context.paths.docs}/operations/infra.md` + `assets/infra-starter.tf` | `kiss-infrastructure-plan` |
 | `{context.paths.docs}/operations/containers.md` + `assets/Dockerfile.sample` + `assets/compose.sample.yml` | `kiss-containerization` |
-| `{context.paths.docs}/operations/monitoring.md` + `assets/alerts.sample.yml` + `assets/dashboard.sample.json` | `kiss-monitoring` |
-| `{context.paths.docs}/operations/deployment.md` + per-release notes | `kiss-deployment` |
+| `{context.paths.docs}/operations/monitoring.md` + `assets/alerts.sample.yml` + `assets/dashboard.sample.json` | `kiss-observability-plan` |
+| `{context.paths.docs}/operations/deployment.md` + per-release notes | `kiss-deployment-strategy` |
 | `{context.paths.docs}/operations/ops-debts.md` | all (append) |
 
 ## Handover contracts
@@ -273,13 +272,13 @@ For every `not sure` / `skip` / sensible-default answer:
 If the skill scripts can't run, run the questionnaire above and
 write the answers directly into:
 
-- `kiss-cicd/templates/cicd-template.md` → `cicd.md`
-- `kiss-infra/templates/infra-template.md` → `infra.md`
+- `kiss-cicd-pipeline/templates/cicd-template.md` → `cicd.md`
+- `kiss-infrastructure-plan/templates/infra-template.md` → `infra.md`
 - `kiss-containerization/templates/containers-template.md` →
   `containers.md`
-- `kiss-monitoring/templates/monitoring-template.md` →
+- `kiss-observability-plan/templates/monitoring-template.md` →
   `monitoring.md`
-- `kiss-deployment/templates/deployment-template.md` →
+- `kiss-deployment-strategy/templates/deployment-template.md` →
   `deployment.md`
 
 ## Debt register

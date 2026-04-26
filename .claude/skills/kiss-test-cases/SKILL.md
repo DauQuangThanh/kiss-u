@@ -1,6 +1,6 @@
 ---
 name: "kiss-test-cases"
-description: "Generate feature-level test cases from user stories and acceptance criteria. Produces a dependency-ordered test-case file the tester walks through during execution."
+description: "Generates feature-level test cases from user stories and acceptance criteria. Produces a dependency-ordered test-case file the tester walks through during execution. Use when writing test cases, generating a test plan from acceptance criteria, or before starting test execution for a feature."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

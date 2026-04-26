@@ -1,6 +1,6 @@
 ---
 name: "kiss-verify-tasks"
-description: "Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation."
+description: "Performs a non-destructive cross-artefact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation. Use when validating tasks.md after running kiss-taskify, checking that tasks align with the spec and plan, or before starting implementation."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

@@ -1,6 +1,6 @@
 ---
 name: "kiss-backlog"
-description: "Maintain the product backlog — an ordered markdown list of user stories / items keyed by priority, with lightweight estimates, acceptance-criteria pointers, and status. The AI drafts and re-orders the list from priorities the user states; it does not decide priority or commit a team to deliver."
+description: "Maintains the product backlog — an ordered markdown list of user stories / items keyed by priority, with lightweight estimates, acceptance-criteria pointers, and status. Drafts and re-orders the list from priorities the user states; does not decide priority or commit a team to deliver. Use when managing a product backlog, adding user stories, reprioritising features, or preparing for sprint planning."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

@@ -1,8 +1,7 @@
 ---
 name: architect
-description: Use proactively for any software project that needs a technology stack chosen, a system architecture designed, or key technical decisions documented. Invoke when the user wants to evaluate technology options, research frameworks/platforms/services, record Architecture Decision Records (ADRs), produce C4-model architecture diagrams, assess trade-offs between approaches, or translate business and non-functional requirements into a buildable technical blueprint. Supports Agile/Scrum, Kanban, Waterfall, and Hybrid projects. Audience: software architects, tech leads, and senior engineers. Numbered-choice prompts keep decisions discrete and auditable; option labels use standard architectural vocabulary.
+description: Use proactively for any software project that needs a technology stack chosen, a system architecture designed, or key technical decisions documented. Invoke when the user wants to evaluate technology options, record ADRs, produce C4 diagrams, or translate requirements into a technical blueprint.
 tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch
-model: inherit
 color: purple
 ---
 
@@ -110,7 +109,7 @@ already taken.
   surface.
 - **`kiss-tech-research`** — write `{context.paths.docs}/research/<topic>.md` with
   pros/cons tables for 2–4 candidates per decision area.
-- **`kiss-adr`** — append ADRs at `{context.paths.docs}/decisions/ADR-NNN-<slug>.md`.
+- **`kiss-adr-author`** — append ADRs at `{context.paths.docs}/decisions/ADR-NNN-<slug>.md`.
 - **`kiss-c4-diagrams`** — draft `{context.paths.docs}/architecture/c4-*.md`
   Mermaid diagrams.
 
@@ -129,7 +128,7 @@ already taken.
 |---|---|
 | `{context.paths.docs}/architecture/intake.md` | `kiss-arch-intake` |
 | `{context.paths.docs}/architecture/c4-context.md` et al. | `kiss-c4-diagrams` |
-| `{context.paths.docs}/decisions/ADR-NNN-<slug>.md` | `kiss-adr` |
+| `{context.paths.docs}/decisions/ADR-NNN-<slug>.md` | `kiss-adr-author` |
 | `{context.paths.docs}/research/<topic>.md` | `kiss-tech-research` |
 | `{context.paths.docs}/architecture/tech-debts.md` | all skills (append) |
 
@@ -275,7 +274,7 @@ write the answers directly into:
 
 - `kiss-arch-intake/templates/intake-template.md` → `intake.md`
 - `kiss-tech-research` per-area pros/cons tables
-- `kiss-adr/templates/adr-template.md` per decision
+- `kiss-adr-author/templates/adr-template.md` per decision
 - `kiss-c4-diagrams/templates/c4-*-template.md` for diagrams
 
 Cite every external claim (versions, licences, limits); flag

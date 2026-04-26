@@ -1,6 +1,6 @@
 ---
 name: "kiss-retrospective"
-description: "Synthesize provided retrospective notes (or a pasted What-went-well / What-didn't / Try-next transcript) into structured action items with owners and target sprints. The AI does NOT facilitate the retro — the team holds it and provides the notes."
+description: "Synthesises provided retrospective notes (or a pasted What-went-well / What-didn't / Try-next transcript) into structured action items with owners and target sprints. Does NOT facilitate the retro — the team holds it and provides the notes. Use when processing sprint retrospective notes, capturing action items from a retrospective, or converting retro output into a tracked list."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

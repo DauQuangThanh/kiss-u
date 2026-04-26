@@ -1,6 +1,6 @@
 ---
 name: "kiss-dependency-audit"
-description: "Audit third-party dependencies: list direct + transitive deps, cross-reference against CVE databases (via WebSearch/WebFetch), surface licence conflicts and abandonware. Records audit as a dated file so subsequent runs show drift."
+description: "Audits third-party dependencies: lists direct + transitive deps, cross-references against CVE databases (via WebSearch/WebFetch), surfaces licence conflicts and abandonware. Records audit as a dated file so subsequent runs show drift. Use when checking for security vulnerabilities in dependencies, performing a licence audit, or reviewing third-party packages for risk."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

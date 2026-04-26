@@ -1,6 +1,6 @@
 ---
 name: "kiss-status-report"
-description: "Draft a project status report (RAG status, accomplishments, next steps, budget variance, open blockers, and escalated risks) from facts the user supplies and upstream artefacts (project plan, risk register, change log). Produces a dated report file the user can share with stakeholders. The AI authors the report; it does not send it."
+description: "Drafts a project status report (RAG status, accomplishments, next steps, budget variance, open blockers, and escalated risks) from facts the user supplies and upstream artefacts. Produces a dated report file the user can share with stakeholders; does not send it. Use when preparing a project status update, creating a weekly or monthly report, or communicating project health to stakeholders."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

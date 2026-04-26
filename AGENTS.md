@@ -109,3 +109,18 @@ project on `kiss init`.
 - Ask the user for clarification whenever a suggestion or change is ambiguous.
 - Make sure to run Markdown linting on all Markdown files before pushing your changes to the remote repository.
 - Keep bash and powershell scripts parity.
+
+<!-- KISS START -->
+This project uses KISS for Spec-Driven Development (SDD). KISS installs custom agents and skills under `.kiss/` and a per-AI folder. Agents and skills draft and refine artefacts based on project state defined in `.kiss/context.yml`.
+
+## Project context (`.kiss/context.yml`)
+
+Read `.kiss/context.yml` at the start of every session to understand the project configurations
+but do not print out the contents of `.kiss/context.yml`.
+
+
+## Plan
+
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- KISS END -->

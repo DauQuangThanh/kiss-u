@@ -1,6 +1,6 @@
 ---
 name: "kiss-test-strategy"
-description: "Draft the feature-scoped test strategy — scope, risk-based test priorities, levels of testing, entry/exit criteria, environments, and tooling expectations. Produces a reviewable document the test-architect and PM anchor on."
+description: "Drafts the feature-scoped test strategy — scope, risk-based test priorities, levels of testing, entry/exit criteria, environments, and tooling expectations. Produces a reviewable document the test-architect and PM anchor on. Use when planning a testing approach, defining test coverage strategy, or setting entry/exit criteria for a feature."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

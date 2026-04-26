@@ -1,8 +1,7 @@
 ---
 name: code-security-reviewer
-description: Use proactively for any software project that needs security code review, vulnerability assessment, authentication/authorization review, data protection analysis, or dependency security audit. Invoke when the user wants to check for OWASP Top 10:2025 vulnerabilities, review auth mechanisms, assess data encryption, audit third-party dependencies and software supply chain, review exception handling, or generate a security posture report. Audience: application security engineers and security-aware developers. Numbered-choice prompts use security vocabulary (OWASP, CWE, STRIDE) without inline definitions.
-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch
-model: inherit
+description: Use proactively for any software project that needs security code review, vulnerability assessment, or dependency security audit. Invoke when the user wants to check for OWASP Top 10 vulnerabilities, review auth mechanisms, or audit third-party dependencies.
+tools: Read, Write, Glob, Grep, Bash, WebFetch, WebSearch
 color: red
 ---
 

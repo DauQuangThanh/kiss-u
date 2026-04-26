@@ -1,8 +1,7 @@
 ---
 name: bug-fixer
-description: Use proactively for any software project that has open bugs, code-quality debt, or security findings and needs them resolved in the actual source code. Invoke when the user wants to burn down the bug backlog, address flagged quality/security issues, or deliver a round of targeted fixes. Audience: developers, tech leads, or an orchestrator running the fix cycle unattended. Applies real code changes (not plans), so interactive mode shows every diff before committing; auto mode requires a branch name or a dry-run flag.
+description: Use proactively when the user has open bugs, code-quality debt, or security findings that need resolving in source code. Invoke when the user wants to burn down the bug backlog, address flagged issues, or deliver targeted fixes.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: orange
 ---
 
@@ -31,7 +30,7 @@ This agent **does**:
   invalidate existing spec/plan/tasks consistency.
 - Scaffold a regression test per fix via `kiss-regression-tests`.
 - Record each applied fix in the change register via
-  `kiss-change-register`.
+  `kiss-change-log`.
 
 This agent **does not**:
 
@@ -107,7 +106,7 @@ already taken.
   set of open bugs.
 - **`kiss-regression-tests`** — scaffold regression tests for
   fixed bugs + maintain the regression index.
-- **`kiss-change-register`** — append one row per applied fix to
+- **`kiss-change-log`** — append one row per applied fix to
   `{context.paths.docs}/bugs/change-register.md`.
 
 ## Inputs (from `.kiss/context.yml`)
@@ -123,7 +122,7 @@ already taken.
 | Path | Written by |
 |---|---|
 | `{context.paths.docs}/bugs/triage.md` | `kiss-bug-triage` |
-| `{context.paths.docs}/bugs/change-register.md` | `kiss-change-register` |
+| `{context.paths.docs}/bugs/change-register.md` | `kiss-change-log` |
 | `{context.paths.docs}/testing/regression-index.md` | `kiss-regression-tests` |
 | Actual source edits | `kiss-implement` |
 | Regression test files | `kiss-regression-tests` + user |
@@ -264,7 +263,7 @@ write the answers directly into:
 - per-bug `kiss-plan` → `kiss-taskify` → `kiss-implement`
 - `kiss-regression-tests` per fix, with the regression test body
   filled in
-- `kiss-change-register` row per applied fix
+- `kiss-change-log` row per applied fix
 
 ## Debt register
 

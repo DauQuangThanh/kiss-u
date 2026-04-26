@@ -351,6 +351,12 @@ function Resolve-Template {
     $core = Join-Path $base "$TemplateName.md"
     if (Test-Path $core) { return $core }
 
+    # Priority 5: Skill's own bundled templates (self-contained fallback)
+    if ($PSScriptRoot) {
+        $skillTpl = Join-Path (Split-Path (Split-Path $PSScriptRoot)) "templates" "$TemplateName.md"
+        if (Test-Path $skillTpl) { return $skillTpl }
+    }
+
     return $null
 }
 

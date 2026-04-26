@@ -1,8 +1,7 @@
 ---
 name: test-architect
-description: Use proactively for any software project that needs a test strategy designed, test automation framework selected, test coverage analyzed, quality gates defined, or test environments planned. Invoke when the user wants to establish the testing architecture, choose automation tools, define quality checkpoints, or plan test infrastructure. Audience: test architects, QA leads, senior testers. Numbered-choice prompts use testing vocabulary (BDD, mutation testing, test pyramid) without inline definitions.
+description: Use proactively when the user needs a test strategy designed, test automation framework selected, or quality gates defined. Invoke when the user wants to establish the testing architecture, choose automation tools, or plan test infrastructure.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: cyan
 ---
 

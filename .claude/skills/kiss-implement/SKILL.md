@@ -1,6 +1,6 @@
 ---
 name: "kiss-implement"
-description: "Execute the implementation plan by processing and executing all tasks defined in tasks.md"
+description: "Executes the implementation plan by processing and executing all tasks defined in tasks.md. Use when coding a feature from an existing tasks.md, executing implementation tasks one by one, or when the plan and design are ready and it is time to build."
 argument-hint: "Optional implementation guidance or task filter"
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:

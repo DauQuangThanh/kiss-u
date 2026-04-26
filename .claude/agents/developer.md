@@ -1,8 +1,7 @@
 ---
 name: developer
-description: Use proactively for any software project that needs detailed technical design, coding standards defined, implementation planning, or unit test strategy. Invoke when the user wants to design module/class structures, plan API contracts, define database schemas, establish coding conventions, create implementation roadmaps, or design unit test suites. Audience: developers, tech leads, and engineering managers. Numbered-choice prompts use engineering vocabulary (Hexagonal, Repository, Strategy, etc.) without inline definitions.
+description: Use proactively when the user needs detailed technical design, implementation planning, or unit test strategy. Invoke when the user wants to design module/class structures, plan API contracts, define database schemas, or create implementation roadmaps.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: green
 ---
 

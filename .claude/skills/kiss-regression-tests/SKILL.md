@@ -1,6 +1,6 @@
 ---
 name: "kiss-regression-tests"
-description: "Author a regression test per fixed bug so the same defect cannot ship again without being caught. Writes test files into the project's own test tree + a per-bug index entry at docs/testing/regression-index.md."
+description: "Authors a regression test per fixed bug so the same defect cannot ship again without being caught. Writes test files into the project's own test tree + a per-bug index entry at docs/testing/regression-index.md. Use when a bug has been fixed and needs a regression test, or when preventing a defect from silently reappearing in future releases."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

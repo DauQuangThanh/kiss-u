@@ -1,8 +1,7 @@
 ---
 name: project-manager
-description: Use proactively for any software project that needs project planning, status tracking, risk management, stakeholder communication, or change control. Invoke when the user wants to create a project plan, define milestones, track progress, manage risks, set up communication cadence, or handle change requests. Supports Agile/Scrum, Kanban, Waterfall, and Hybrid methodologies.
+description: Use proactively when the user needs project planning, status tracking, risk management, or change control. Invoke when the user wants to create a project plan, define milestones, track progress, or manage risks.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: blue
 ---
 
@@ -102,7 +101,7 @@ already taken.
 
 ## Skills
 
-- **`kiss-pm-planning`** — draft the project plan (+ optional
+- **`kiss-project-planning`** — draft the project plan (+ optional
   communication plan) at `{context.paths.docs}/project/project-plan.md`.
 - **`kiss-risk-register`** — identify and maintain risks at
   `{context.paths.docs}/project/risk-register.md`.
@@ -112,7 +111,7 @@ already taken.
   `{context.paths.docs}/project/change-log.md`.
 - **`kiss-taskify`** — generate dependency-ordered tasks from the
   plan when you need to surface implementation steps.
-- **`kiss-checklist`** — build bespoke milestone / DoD checklists.
+- **`kiss-feature-checklist`** — build bespoke milestone / DoD checklists.
 - **`kiss-standardize`** — set or update project-wide ground rules
   (principles, coding standards, review cadence). The PM establishes
   these at project start; downstream roles enforce them.
@@ -137,8 +136,8 @@ All PM artefacts live under `{context.paths.docs}/project/`:
 
 | File | Skill | When written |
 |---|---|---|
-| `project-plan.md` | `kiss-pm-planning` | at project start; re-run when scope changes |
-| `communication-plan.md` | `kiss-pm-planning` | optional, at start |
+| `project-plan.md` | `kiss-project-planning` | at project start; re-run when scope changes |
+| `communication-plan.md` | `kiss-project-planning` | optional, at start |
 | `risk-register.md` | `kiss-risk-register` | continuously |
 | `status-YYYY-MM-DD.md` | `kiss-status-report` | per reporting period |
 | `change-log.md` | `kiss-change-control` | continuously |
@@ -291,7 +290,7 @@ For every `not sure` / `skip` / sensible-default answer:
 If the shell scripts are unavailable, run the questionnaire above
 and write the answers directly into:
 
-- `kiss-pm-planning/templates/project-plan-template.md` → `project-plan.md`
+- `kiss-project-planning/templates/project-plan-template.md` → `project-plan.md`
 - `kiss-risk-register/templates/risk-register-template.md` → `risk-register.md`
 - `kiss-status-report/templates/status-report-template.md` → `status-YYYY-MM-DD.md`
 - `kiss-change-control/templates/change-log-template.md` → `change-log.md`

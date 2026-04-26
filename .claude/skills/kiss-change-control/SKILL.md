@@ -1,6 +1,6 @@
 ---
 name: "kiss-change-control"
-description: "Maintain a project change-request ledger. Capture incoming change requests, draft impact assessments (scope / schedule / budget / quality), record CCB decisions the user reports, and track implementation. The AI authors and maintains the ledger; it never approves, rejects, or decides a change itself."
+description: "Maintains a project change-request ledger. Captures incoming change requests, drafts impact assessments (scope / schedule / budget / quality), records CCB decisions the user reports, and tracks implementation. Authors and maintains the ledger; never approves, rejects, or decides a change itself. Use when managing change requests, tracking scope changes, or recording CCB decisions."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"
@@ -71,7 +71,7 @@ Does not mutate `.kiss/context.yml`.
 
 ## Handoffs
 
-- `kiss-pm-planning` may need re-running if an approved CR changes
+- `kiss-project-planning` may need re-running if an approved CR changes
   scope or critical-path milestones.
 - `kiss-status-report` reads the change log to list recent CRs.
 - `kiss-risk-register` reads the change log when assessing
@@ -94,7 +94,7 @@ It does **not**:
 - Approve or reject a change-request.
 - Schedule or hold a CCB meeting.
 - Update the project plan automatically on an "approved" CR —
-  that's a separate, explicit run of `kiss-pm-planning`.
+  that's a separate, explicit run of `kiss-project-planning`.
 - Notify stakeholders of a decision.
 
 ## Usage

@@ -1,6 +1,6 @@
 ---
 name: "kiss-dev-design"
-description: "Draft detailed module / API / data-model / integration design for the active feature, under docs/design/<feature>/. Uses the architecture intake + ADRs + spec as inputs. Does not commit to implementation timelines."
+description: "Drafts detailed module / API / data-model / integration design for the active feature, under docs/design/<feature>/. Uses the architecture intake + ADRs + spec as inputs. Does not commit to implementation timelines. Use when designing technical implementation, planning module structure, or before coding starts on a new feature."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

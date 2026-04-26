@@ -1,6 +1,6 @@
 ---
 name: "kiss-bug-report"
-description: "Author a structured bug report file per bug at docs/bugs/BUG-NNN-<slug>.md. Captures repro, expected vs actual, severity, affected version, and traceability to the failed test case or user story."
+description: "Authors a structured bug report file per bug at docs/bugs/BUG-NNN-<slug>.md. Captures repro, expected vs actual, severity, affected version, and traceability to the failed test case or user story. Use when filing a new bug, documenting a defect found during testing, or when a failing test needs a formal bug report."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

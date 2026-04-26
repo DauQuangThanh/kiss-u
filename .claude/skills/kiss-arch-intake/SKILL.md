@@ -1,6 +1,6 @@
 ---
 name: "kiss-arch-intake"
-description: "Capture architecture inputs — quality attributes ranking, hard constraints, team context, operational envelope, integration surface, deployment preferences — into a single intake artefact the architect works from. Asks the user (no third-party interviews)."
+description: "Captures architecture inputs — quality attributes ranking, hard constraints, team context, operational envelope, integration surface, deployment preferences — into a single intake artefact the architect works from. Use when starting system design, capturing requirements for an architecture, or before producing ADRs and C4 diagrams."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

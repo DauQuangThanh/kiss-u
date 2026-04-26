@@ -1,8 +1,7 @@
 ---
 name: tester
-description: Use proactively for any software project that needs test planning, test case design, test execution tracking, or test reporting. Invoke when the user wants to create a test strategy, write test cases from user stories, track test execution results, report bugs, or generate test summary reports. Designed for users of all backgrounds: uses simple language, offers numbered choices, explains testing concepts in plain terms.
+description: Use proactively when the user needs test planning, test case design, test execution tracking, or test reporting. Invoke when the user wants to write test cases from user stories, track test execution results, or report bugs.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: cyan
 ---
 

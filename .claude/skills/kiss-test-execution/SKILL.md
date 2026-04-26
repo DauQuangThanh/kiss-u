@@ -1,6 +1,6 @@
 ---
 name: "kiss-test-execution"
-description: "Maintain a test-execution ledger for the active feature. Records pass / fail / skipped counts per run, links failed cases to bug reports, and summarises coverage against acceptance criteria. The AI records; the tester runs the tests."
+description: "Maintains a test-execution ledger for the active feature. Records pass / fail / skipped counts per run, links failed cases to bug reports, and summarises coverage against acceptance criteria. The AI records; the tester runs the tests. Use when logging test run results, tracking pass/fail status, or linking failed tests to bug reports."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

@@ -1,6 +1,6 @@
 ---
 name: "kiss-tech-research"
-description: "Research technology options for a named decision area (frontend framework, database, messaging, identity, etc.) using WebSearch / WebFetch when available. Produces a pros/cons table + typical cost signal per candidate. Records sources. Does not pick the winner."
+description: "Researches technology options for a named decision area (frontend framework, database, messaging, identity, etc.) using WebSearch / WebFetch when available. Produces a pros/cons table + typical cost signal per candidate. Records sources. Does not pick the winner. Use when evaluating technology choices, comparing frameworks or databases, or before writing an ADR for a technology decision."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

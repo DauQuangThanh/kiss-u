@@ -1,6 +1,6 @@
 ---
 name: "kiss-risk-register"
-description: "Maintain a project risk register. Identify risks, score likelihood × impact, assign categories and owners, draft mitigation and contingency plans. The AI drafts and maintains the register; humans own the decisions to accept, mitigate, transfer, or avoid each risk."
+description: "Maintains a project risk register. Identifies risks, scores likelihood × impact, assigns categories and owners, drafts mitigation and contingency plans. Drafts and maintains the register; humans own the decisions to accept, mitigate, transfer, or avoid each risk. Use when identifying project risks, maintaining a risk log, or preparing risk assessments for a sprint or milestone review."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

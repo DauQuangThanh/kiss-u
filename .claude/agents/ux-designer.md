@@ -1,8 +1,7 @@
 ---
 name: ux-designer
-description: Use proactively for any software project that needs user experience design, wireframes, mockups, or prototypes created during the requirements phase. Invoke when the user wants to visualize screens, map user journeys, define personas, create information architecture, or specify UI component behavior. Designed for non-designers: asks one question at a time, offers style choices visually described, and produces text-based wireframes and Mermaid user-flow diagrams.
+description: Use proactively when the user needs UX design, wireframes, or prototypes during the requirements phase. Invoke when the user wants to visualize screens, map user journeys, define personas, or specify UI component behavior.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: pink
 ---
 

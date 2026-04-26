@@ -1,6 +1,6 @@
 ---
 name: "kiss-quality-review"
-description: "Review a feature's code for maintainability, SOLID/DRY/KISS compliance, cyclomatic complexity, and adherence to project standards. Produces a feature-scoped review file with findings, severity, and recommended fixes. Does not modify code."
+description: "Reviews a feature's code for maintainability, SOLID/DRY/KISS compliance, cyclomatic complexity, and adherence to project standards. Produces a feature-scoped review file with findings, severity, and recommended fixes. Does not modify code. Use when reviewing code quality, checking standards compliance, or performing a pre-merge code review."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

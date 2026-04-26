@@ -1,6 +1,6 @@
 ---
 name: "kiss-unit-tests"
-description: "Generate unit-test skeletons for the active feature from the design + acceptance criteria. Writes test files into the project's own test tree (not under docs/). Covers the happy path, negative branches, and at least one boundary per function."
+description: "Generates unit-test skeletons for the active feature from the design + acceptance criteria. Writes test files into the project's own test tree (not under docs/). Covers the happy path, negative branches, and at least one boundary per function. Use when writing unit tests, generating test skeletons for a feature, or when test coverage needs to be added for new code."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

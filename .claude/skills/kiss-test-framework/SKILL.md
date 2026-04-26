@@ -1,6 +1,6 @@
 ---
 name: "kiss-test-framework"
-description: "Recommend unit + integration + e2e frameworks that fit the project's language + architecture, draft the folder layout, and list the tooling versions. Writes docs/testing/<feature>/framework.md."
+description: "Recommends unit + integration + e2e frameworks that fit the project's language + architecture, drafts the folder layout, and lists the tooling versions. Use when choosing a test framework, setting up testing infrastructure, or defining the test toolchain for a new project or language stack."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

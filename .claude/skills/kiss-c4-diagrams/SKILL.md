@@ -1,6 +1,6 @@
 ---
 name: "kiss-c4-diagrams"
-description: "Author C4 model diagrams (Context / Container / Component) as Mermaid flowcharts. Produces three files per project so the system can be described at every zoom level. Draws what the user has declared; does not invent components."
+description: "Authors C4 model diagrams (Context / Container / Component) as Mermaid flowcharts. Produces three files per project so the system can be described at every zoom level. Draws what the user has declared; does not invent components. Use when creating architecture diagrams, visualising system structure, or when the project needs Context, Container, or Component-level views."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

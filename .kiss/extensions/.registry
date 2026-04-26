@@ -4,7 +4,7 @@
     "git": {
       "version": "1.0.0",
       "source": "local",
-      "manifest_hash": "sha256:f763ab9810234051fb01ba57de9785b91888a1fa911f38e6b324ec9ebdad7b4e",
+      "manifest_hash": "sha256:c575a7feeb8638890db13de36ae6879d2f35ed3c851661fa031b561ab50341b2",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -14,10 +14,17 @@
           "kiss.git.remote",
           "kiss.git.initialize",
           "kiss.git.commit"
+        ],
+        "copilot": [
+          "kiss.git.feature",
+          "kiss.git.validate",
+          "kiss.git.remote",
+          "kiss.git.initialize",
+          "kiss.git.commit"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-04-26T01:42:50.250694+00:00"
+      "installed_at": "2026-04-26T15:43:18.965141+00:00"
     }
   }
 }

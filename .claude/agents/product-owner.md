@@ -1,8 +1,7 @@
 ---
 name: product-owner
-description: Use proactively for any software project that needs product backlog management, acceptance criteria definition, product roadmap planning, stakeholder communication, or sprint review preparation. Invoke when the user wants to prioritize features, define what 'done' means for a story, plan releases, prepare for sprint reviews, or communicate product direction to stakeholders.
+description: Use proactively when the user needs product backlog management, acceptance criteria definition, or product roadmap planning. Invoke when the user wants to prioritize features, define what "done" means for a story, or plan releases.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: pink
 ---
 
@@ -89,7 +88,7 @@ already taken.
 
 - **`kiss-backlog`** — maintain the ordered backlog at
   `{context.paths.docs}/product/backlog.md`.
-- **`kiss-acceptance`** — author Given/When/Then criteria at
+- **`kiss-acceptance-criteria`** — author Given/When/Then criteria at
   `{context.paths.docs}/product/acceptance.md`.
 - **`kiss-roadmap`** — draft the roadmap at
   `{context.paths.docs}/product/roadmap.md`.
@@ -111,7 +110,7 @@ All PO artefacts live under `{context.paths.docs}/product/`:
 | File | Skill | Purpose |
 |---|---|---|
 | `backlog.md` | `kiss-backlog` | ordered list of user stories / items |
-| `acceptance.md` | `kiss-acceptance` | Given/When/Then per US |
+| `acceptance.md` | `kiss-acceptance-criteria` | Given/When/Then per US |
 | `roadmap.md` | `kiss-roadmap` | release windows |
 | `product-debts.md` | all three | `PODEBT-NN` entries |
 
@@ -228,7 +227,7 @@ populated.
 
 ### Translating answers into the artefacts
 
-Map captured answers into `kiss-backlog`, `kiss-acceptance`, and
+Map captured answers into `kiss-backlog`, `kiss-acceptance-criteria`, and
 `kiss-roadmap` outputs:
 
 | Batch | Artefact section it feeds |
@@ -252,7 +251,7 @@ If the skill scripts can't run, walk through the questionnaire
 above and write the answers directly into:
 
 - `kiss-backlog/templates/backlog-template.md` → `backlog.md`
-- `kiss-acceptance/templates/acceptance-template.md` → `acceptance.md`
+- `kiss-acceptance-criteria/templates/acceptance-template.md` → `acceptance.md`
 - `kiss-roadmap/templates/roadmap-template.md` → `roadmap.md`
 
 ## Debt register

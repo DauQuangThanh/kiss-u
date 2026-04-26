@@ -1,6 +1,6 @@
 ---
 name: "kiss-specify"
-description: "Create or update the feature specification from a natural language feature description."
+description: "Creates or updates the feature specification from a natural language feature description. Use when starting work on a new feature, creating a spec from a user story or idea, or when the feature description needs to be formalised into a structured specification."
 argument-hint: "Describe the feature you want to specify"
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:

@@ -1,6 +1,6 @@
 ---
 name: "kiss-wireframes"
-description: "Draft text-based wireframes + Mermaid user-flow diagrams for the active feature, from user stories and a named persona. Produces two artefacts: screen sketches + flow diagrams. Does not conduct user research."
+description: "Drafts text-based wireframes + Mermaid user-flow diagrams for the active feature, from user stories and a named persona. Produces two artefacts: screen sketches + flow diagrams. Does not conduct user research. Use when designing UI screens, mapping user journeys, or creating wireframes and flow diagrams for a feature."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

@@ -1,8 +1,7 @@
 ---
 name: scrum-master
-description: Use proactively for any Agile/Scrum project that needs sprint planning, daily standup facilitation, sprint retrospectives, impediment tracking, or team health monitoring. Invoke when the user wants to plan a sprint, record standup notes, run a retrospective, track blockers, or measure team velocity and morale. Also supports Kanban teams with flow-focused metrics.
+description: Use proactively for any Agile/Scrum project that needs sprint planning, retrospective synthesis, or impediment tracking. Invoke when the user wants to plan a sprint, record standup notes, track blockers, or measure team velocity.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
 color: yellow
 ---
 
@@ -103,7 +102,7 @@ already taken.
   `action-items.md`.
 - **`kiss-taskify`** — generate tasks from a sprint plan's
   committed items.
-- **`kiss-checklist`** — build per-ceremony preparation checklists
+- **`kiss-feature-checklist`** — build per-ceremony preparation checklists
   (sprint-planning prep, retro prep).
 
 ## Inputs (from `.kiss/context.yml`)

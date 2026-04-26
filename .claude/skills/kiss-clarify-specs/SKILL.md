@@ -1,6 +1,6 @@
 ---
 name: "kiss-clarify-specs"
-description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
+description: "Identifies underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec. Use when a spec has gaps or ambiguities, before implementation starts, or when the team disagrees on scope."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"

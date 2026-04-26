@@ -1,6 +1,6 @@
 ---
 name: "kiss-bug-triage"
-description: "Triage open bugs into fix-now / next-sprint / defer / won't-fix buckets from severity + priority + age + business cost. Produces a dated triage list the bug-fixer / PO can act on."
+description: "Triages open bugs into fix-now / next-sprint / defer / won't-fix buckets from severity + priority + age + business cost. Produces a dated triage list the bug-fixer / PO can act on. Use when prioritising a bug backlog, deciding what to fix next, or preparing for a bug-fix sprint."
 compatibility: "Requires kiss project structure with .kiss/ directory"
 metadata:
   author: "github-kiss"
