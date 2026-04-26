@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "KISS — a tool to bootstrap your projects for Spec-Driven Development (SDD) with reusable AI components."
 requires-python = ">=3.11"
 dependencies = [
-    "typer>=0.24.2",
+    "typer>=0.25.0",
     "click>=8.3.3",
     "rich",
     "platformdirs",
