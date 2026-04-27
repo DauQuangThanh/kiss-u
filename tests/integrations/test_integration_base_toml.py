@@ -512,17 +512,18 @@ class TomlIntegrationTests:
 
         files: list[str] = []
 
-        # Per-command bundles: <cmd_name><extension> + scripts/{bash,ps}/* + templates/*
+        # Per-command bundles: <cmd_name><extension> + scripts/**/* (excl. __pycache__) + templates/**/*
         for skill_dir in list_skill_dirs():
             stem = skill_dir.name.removeprefix("kiss-")
             cmd_name = f"kiss.{stem}"
             files.append(f"{cmd_dir}/{cmd_name}/{cmd_name}{ext}")
-            for sub in ("scripts/bash", "scripts/powershell", "templates"):
+            for sub in ("scripts", "templates"):
                 sub_dir = skill_dir / sub
                 if sub_dir.is_dir():
-                    for f in sub_dir.iterdir():
-                        if f.is_file():
-                            files.append(f"{cmd_dir}/{cmd_name}/{sub}/{f.name}")
+                    for f in sub_dir.rglob("*"):
+                        if f.is_file() and "__pycache__" not in f.parts:
+                            rel = f.relative_to(skill_dir).as_posix()
+                            files.append(f"{cmd_dir}/{cmd_name}/{rel}")
 
         # Custom agents — installed under <folder>/<agents_subdir>/
         custom_agents_dest = i.custom_agents_dest(Path("."))

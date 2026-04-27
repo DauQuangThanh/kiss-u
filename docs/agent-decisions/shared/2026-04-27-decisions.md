@@ -2,7 +2,7 @@
 
 **Mode:** interactive
 
-### D-01 — default-applied
+## D-01 — default-applied
 
 - **What:** KISS_SPA_DARK_MODE=true
 - **Why:** No dark-mode preference specified
@@ -37,4 +37,3 @@
 - **What:** KISS_VUE_SPA_APP_NAME=my-app
 - **Why:** No app name specified
 - **Time:** 2026-04-27T03:13:43Z
-

@@ -4,7 +4,7 @@
 </div>
 
 <p align="center">
-    <strong>An open-source toolkit for Spec-Driven Development. Focus on product outcomes and predictable results instead of rebuilding the same scaffolding with every prompt.</strong>
+    <strong>An open-source AI delivery platform that spans the complete software development lifecycle — from requirements and architecture through implementation, testing, code review, security, and operations. Fifty-plus reusable role skills, fourteen AI-powered role agents, and native support for Agile, Waterfall, and hybrid delivery, all bootstrapped with a single command.</strong>
 </p>
 
 <p align="center">
@@ -12,6 +12,9 @@
     <a href="https://github.com/DauQuangThanh/kiss-u/stargazers"><img src="https://img.shields.io/github/stars/DauQuangThanh/kiss?style=social" alt="GitHub Stars"/></a>
     <a href="https://github.com/DauQuangThanh/kiss-u/blob/main/LICENSE"><img src="https://img.shields.io/github/license/DauQuangThanh/kiss" alt="License"/></a>
     <a href="https://dauquangthanh.github.io/kiss/"><img src="https://img.shields.io/badge/docs-GitHub_Pages-blue" alt="Documentation"/></a>
+    <img src="https://img.shields.io/badge/skills-50%2B-brightgreen" alt="50+ Skills"/>
+    <img src="https://img.shields.io/badge/role_agents-14-blue" alt="14 Role Agents"/>
+    <img src="https://img.shields.io/badge/AI_providers-7-purple" alt="7 AI Providers"/>
 </p>
 
 ---
@@ -23,7 +26,13 @@
 - [Getting Started](#getting-started)
 - [Supported AI Coding Agents](#supported-ai-coding-agents)
 - [Role Agents](#role-agents)
+  - [Execution Modes](#execution-modes)
+  - [Artefact Layout](#artefact-layout)
 - [Slash Commands](#slash-commands)
+  - [Core Commands](#core-commands)
+  - [Optional Commands](#optional-commands)
+  - [Waterfall / Large-Project Commands](#waterfall--large-project-commands)
+  - [Document Conversion Commands](#document-conversion-commands)
 - [CLI Reference](#cli-reference)
 - [Customization: Extensions, Presets, and Workflows](#customization-extensions-presets-and-workflows)
 - [Core Philosophy](#core-philosophy)
@@ -36,9 +45,9 @@
 
 ## Overview
 
-KISS is a command-line installer that bootstraps projects for Spec-Driven Development. It provisions a curated bundle of prompts, templates, scripts, extensions, presets, workflows, and AI-agent integrations into your project with a single `kiss init` command.
+KISS is a command-line installer that bootstraps projects for the full software development lifecycle. A single `kiss init` provisions fifty-plus role-specific AI skills, fourteen role-based custom agents, and a deep customization layer of extensions, presets, and workflows into your project.
 
-The toolkit runs offline once installed, supports seven AI coding agents across CLI and IDE environments, and works consistently on macOS, Linux, and Windows.
+The platform covers every delivery phase — requirements gathering, architecture and design, implementation, testing, code review, security review, operations, project management, and formal Waterfall deliverables — across both Agile and hybrid methodologies. It runs offline once installed, integrates with seven AI coding agents across CLI and IDE environments, and works consistently on macOS, Linux, and Windows.
 
 <img src="./media/frwk.png" alt="KISS Logo" width="100%" height="100%"/>
 

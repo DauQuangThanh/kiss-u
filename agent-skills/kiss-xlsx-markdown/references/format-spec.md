@@ -2,7 +2,7 @@
 
 A workbook is represented by three sibling artifacts:
 
-```
+```text
 model.md              # Markdown with one section per sheet
 model.assets/         # images and chart snapshots
 model.meta.json       # per-cell formatting, merges, validations, charts
@@ -31,7 +31,7 @@ defined_names:
 
 Each sheet is wrapped in paired HTML comments:
 
-```
+````text
 <!-- sheet:start name="Forecast" id="2" hidden="false" -->
 ```yaml meta
 ... per-sheet metadata ...
@@ -40,9 +40,10 @@ Each sheet is wrapped in paired HTML comments:
 | ... GFM table ... |
 
 <!-- sheet:end -->
-```
+````
 
 Attributes on `sheet:start`:
+
 - `name` — sheet name (exact).
 - `id` — stable integer id; preserved across round-trips.
 - `hidden` — `true` | `false` | `veryhidden`.
@@ -159,6 +160,7 @@ If a cell exists in the sidecar but not in the Markdown (e.g., the row was delet
 ## Determinism
 
 The exporter normalizes its output:
+
 - Sheets emitted in workbook order.
 - Column widths sorted by column letter.
 - `cells` dict in the sidecar sorted by `(row, col)`.

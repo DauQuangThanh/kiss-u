@@ -101,16 +101,20 @@ class SkillsIntegrationTests:
 
         expected_commands = {
             "acceptance-criteria", "adr-author", "api-docs", "arch-extraction",
-            "arch-intake", "backlog", "bug-report", "bug-triage", "c4-diagrams",
-            "change-control", "change-log", "cicd-pipeline", "clarify-specs",
-            "codebase-scan", "containerization", "dependency-audit", "dependency-map",
-            "deployment-strategy", "dev-design", "feature-checklist", "implement",
-            "infrastructure-plan", "observability-plan", "plan", "project-planning",
-            "quality-gates", "quality-review", "regression-tests", "retrospective",
+            "arch-intake", "backlog", "baseline", "bug-report", "bug-triage",
+            "c4-diagrams", "change-control", "change-log", "cicd-pipeline",
+            "clarify-specs", "codebase-scan", "containerization",
+            "data-migration-plan", "dependency-audit", "dependency-map",
+            "deployment-strategy", "dev-design", "docx-markdown", "feature-checklist",
+            "handover", "implement", "infrastructure-plan", "observability-plan",
+            "phase-gate", "plan", "pptx-markdown", "project-planning", "quality-gates",
+            "quality-review", "react-spa-mockup", "regression-tests", "retrospective",
             "risk-register", "roadmap", "security-review", "specify", "sprint-planning",
-            "standardize", "standup", "status-report", "taskify", "tasks-to-issues",
-            "tech-research", "test-cases", "test-execution", "test-framework",
-            "test-strategy", "unit-tests", "verify-tasks", "wireframes",
+            "srs", "standardize", "standup", "status-report", "taskify",
+            "tasks-to-issues", "tech-research", "test-cases", "test-execution",
+            "test-framework", "test-strategy", "traceability-matrix", "uat-plan",
+            "unit-tests", "verify-tasks", "vue-spa-mockup", "wbs-decompose",
+            "wireframes", "xlsx-markdown",
         }
 
         # Derive command names from the skill directory names
@@ -367,18 +371,19 @@ class SkillsIntegrationTests:
 
         files: list[str] = []
 
-        # Per-skill bundles: SKILL.md + scripts/{bash,powershell}/* + templates/*
+        # Per-skill bundles: SKILL.md + scripts/**/* (excl. __pycache__) + templates/**/*
         skill_root = agent_skills_root()
         assert skill_root is not None, "agent-skills root not found"
         for skill_dir in list_skill_dirs():
             name = skill_dir.name  # e.g. "kiss-plan"
             files.append(f"{skills_prefix}/{name}/SKILL.md")
-            for sub in ("scripts/bash", "scripts/powershell", "templates"):
+            for sub in ("scripts", "templates"):
                 sub_dir = skill_dir / sub
                 if sub_dir.is_dir():
-                    for f in sub_dir.iterdir():
-                        if f.is_file():
-                            files.append(f"{skills_prefix}/{name}/{sub}/{f.name}")
+                    for f in sub_dir.rglob("*"):
+                        if f.is_file() and "__pycache__" not in f.parts:
+                            rel = f.relative_to(skill_dir).as_posix()
+                            files.append(f"{skills_prefix}/{name}/{rel}")
 
         # Custom agents — installed under <folder>/<agents_subdir>/
         custom_agents_dest = i.custom_agents_dest(Path("."))

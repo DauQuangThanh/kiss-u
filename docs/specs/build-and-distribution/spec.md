@@ -36,6 +36,7 @@ installed in a way that:
   can confirm what they have installed.
 
 Source evidence:
+
 - `pyproject.toml:1-101` — package metadata, dependencies,
   build backend (hatchling), force-include for
   `build/core_pack/` → `kiss_cli/core_pack/`.

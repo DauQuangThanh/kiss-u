@@ -116,6 +116,8 @@ def bundle_skill_assets(
         for entry in sub_src.rglob("*"):
             if not entry.is_file():
                 continue
+            if "__pycache__" in entry.parts:
+                continue
             rel = entry.relative_to(src)
             dst = install_folder / rel
             dst.parent.mkdir(parents=True, exist_ok=True)

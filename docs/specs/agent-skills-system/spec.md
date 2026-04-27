@@ -339,7 +339,7 @@ non-empty.
   SHA-256 hashes per file.
 - **NFR-008 (Self-contained skill)**: A skill folder MUST
   contain everything it needs at runtime (prompt + scripts
-  + templates), so a tar-cp of the folder works as an
+  - templates), so a tar-cp of the folder works as an
   isolated unit (CLAUDE.md "Per-skill bundles").
 - **NFR-009 (agentskills.io compliance)**: Skills MUST
   comply with the agentskills.io specification per

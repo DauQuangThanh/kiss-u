@@ -2,7 +2,7 @@
 
 Documents are represented by four sibling artifacts:
 
-```
+```text
 report.md              # pandoc-flavored Markdown
 report.assets/         # extracted images and media
 report.reference.docx  # copy of the original, used for styles on rebuild
@@ -30,6 +30,7 @@ docx_meta: brief.meta.json
 ```
 
 Optional keys:
+
 - `subject`, `keywords`, `category`, `description` — core properties mapped to docx.
 - `language` — `en-US`, `vi-VN`, etc.
 
@@ -62,6 +63,7 @@ Comments are Markdown spans with the `.comment` class:
 ```
 
 Attributes:
+
 - `author` — required.
 - `date` — required, ISO 8601.
 - `id` — required for replies. If omitted on export the exporter assigns one.
@@ -102,6 +104,7 @@ Two-column section content goes here.
 ```
 
 Supported keys:
+
 - `columns` — integer.
 - `break` — `page` | `column` | `section_next` | `section_even` | `section_odd`.
 - `orientation` — `portrait` | `landscape`.
@@ -188,6 +191,7 @@ Edit the equation in Word or via the base `docx` skill.
 ## Determinism and diffs
 
 The exporter normalizes pandoc's output:
+
 - LF line endings.
 - No trailing whitespace.
 - Sorted YAML keys.

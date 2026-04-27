@@ -28,7 +28,7 @@ Counts exclude `.venv/`, `.git/`, `build/` (build-time staging,
 | Python         | 105   | 37,528 | `find … -name '*.py'` enumeration |
 |   ↳ in `src/kiss_cli/` | 55 | 17,292 | Production code |
 |   ↳ in `tests/`        | 48 | 20,010 | Test suite |
-|   ↳ in `scripts/`      | 2  | hatch hook + checksum generator |
+|   ↳ in `scripts/`      | 2  | n/a | hatch hook + checksum generator |
 | Markdown       | 244+  | n/a   | Skill prompts, presets, docs |
 | YAML           | 36    | n/a   | Manifests + GitHub Actions |
 | Bash (`*.sh`)  | 96+   | n/a   | 92 in `agent-skills/`, 4 in `extensions/` |

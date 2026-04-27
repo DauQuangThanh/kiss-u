@@ -5,7 +5,7 @@
 > owning question still open, the artefact / source it surfaced
 > in, and a status. New entries append; entries close by editing
 > their **Status**.
-
+>
 > Generated 2026-04-26 by `architect` (auto mode), seeded from
 > `docs/architecture/extracted.md` and the re-design pass.
 
@@ -417,7 +417,7 @@
      (`src/kiss_cli/integrations/manifest.py`)
      to account for per-provider rendering being
      deterministic — same wheel + same context.yml
-     + same provider produces identical SHA-256s.
+     - same provider produces identical SHA-256s.
 - **Surface:**
   `docs/decisions/ADR-020-subagent-naming-and-structure.md`,
   `docs/specs/subagent-system/spec.md`

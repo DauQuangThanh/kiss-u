@@ -70,4 +70,4 @@
 
 ---
 
-## All 13 tasks complete.
+## All 13 tasks complete

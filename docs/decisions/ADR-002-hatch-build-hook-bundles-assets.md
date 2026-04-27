@@ -16,6 +16,7 @@ truth for assets").
 
 A wheel must include all of those plus a per-tree
 `sha256sums.txt` for integrity verification. Standard MANIFEST.in
+
 + `package_data` would require duplicating the tree under
 `src/kiss_cli/` or adding many include patterns. The current
 solution is a custom Hatchling build hook
@@ -49,35 +50,35 @@ edit the repo-root trees, never `build/core_pack/`.
 
 ## Consequences
 
-- (+) Single source of truth for assets at the repo root —
++ (+) Single source of truth for assets at the repo root —
   reviewers see the actual file they're shipping.
-- (+) Hash-based integrity baked at build time, not run time.
-- (+) Works for both wheel and sdist via `force-include` and
++ (+) Hash-based integrity baked at build time, not run time.
++ (+) Works for both wheel and sdist via `force-include` and
   sdist `include` settings.
-- (−) New asset directories require updating `ASSET_MAP` in the
++ (−) New asset directories require updating `ASSET_MAP` in the
   hook (one place; `CLAUDE.md` "Guidelines" notes the build hook
   picks up new presets / extensions / workflows automatically as
   long as they live in their existing top-level directories).
-- (−) The hook is a custom plugin; future Hatchling versions may
++ (−) The hook is a custom plugin; future Hatchling versions may
   change the interface.
-- (−) Asset corruption between build and install is detected by
++ (−) Asset corruption between build and install is detected by
   `_integrity.verify_asset_integrity()` (`_integrity.py:24-79`)
   but its production call site is missing today — see TDEBT-002.
 
 ## Alternatives considered
 
-- **MANIFEST.in + `package_data`** with assets duplicated under
++ **MANIFEST.in + `package_data`** with assets duplicated under
   `src/kiss_cli/` — rejected because contributors would have to
   edit two locations.
-- **Setuptools + `include_package_data`** — rejected; the build
++ **Setuptools + `include_package_data`** — rejected; the build
   semantics are less explicit and cross-platform packaging is
   flakier.
-- **Poetry + custom plugins** — rejected; the project standardised
++ **Poetry + custom plugins** — rejected; the project standardised
   on `uv` (`uv.lock`, `astral-sh/setup-uv` in CI).
 
 ## Source evidence
 
-- `pyproject.toml:25-42`
-- `scripts/hatch_build_hooks.py:32-48,104-144`
-- `scripts/generate-checksums.py:31-68`
-- `CLAUDE.md` "Source of truth for assets"
++ `pyproject.toml:25-42`
++ `scripts/hatch_build_hooks.py:32-48,104-144`
++ `scripts/generate-checksums.py:31-68`
++ `CLAUDE.md` "Source of truth for assets"

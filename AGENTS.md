@@ -118,7 +118,6 @@ This project uses KISS for Spec-Driven Development (SDD). KISS installs custom a
 Read `.kiss/context.yml` at the start of every session to understand the project configurations
 but do not print out the contents of `.kiss/context.yml`.
 
-
 ## Plan
 
 For additional context about technologies to be used, project structure,

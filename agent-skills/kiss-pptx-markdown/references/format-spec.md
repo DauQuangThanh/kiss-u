@@ -6,7 +6,7 @@ This document describes the exact Markdown dialect that `pptx_to_md.py` emits an
 
 A deck is represented by three sibling artifacts:
 
-```
+```text
 deck.md            # the Markdown source
 deck.assets/       # images and embedded media
 deck.meta.json     # high-fidelity sidecar (positions, theme, charts)
@@ -34,7 +34,7 @@ pptx_meta: deck.meta.json     # optional: sidecar path, default is <basename>.me
 
 Each slide is wrapped in paired HTML comments. Parsers must match them exactly.
 
-```
+```text
 <!-- slide:start layout="Layout Name" id="<int>" [background="#RRGGBB"] -->
   ...slide content...
 <!-- notes:start -->
@@ -44,6 +44,7 @@ Each slide is wrapped in paired HTML comments. Parsers must match them exactly.
 ```
 
 Attributes on `slide:start`:
+
 - `layout` (required): name of a layout on the template deck. Names are case-sensitive. If missing from the template at rebuild time, `md_to_pptx.py` falls back to the first layout that exposes a title placeholder.
 - `id` (required): stable integer identifier for the slide. Used to correlate with `meta.json`. Ids do not need to be contiguous or in order.
 - `background` (optional): `#RRGGBB` solid fill override; omit to inherit from the master.
@@ -86,6 +87,7 @@ Use standard Markdown image syntax with Pandoc-style attribute blocks for positi
 ```
 
 Supported attributes:
+
 - `#id` — stable shape id, must match a shape entry in `meta.json`.
 - `.class` — free-form classification (e.g., `.chart`, `.icon`, `.photo`), preserved for round-trip.
 - `width`, `height`, `x`, `y` — with units `in`, `cm`, or `pt`. Required for exact positioning; omitted values inherit from `meta.json` if present.
@@ -176,6 +178,7 @@ All EMU (English Metric Units) values follow OOXML: 914400 EMU = 1 inch. The reb
 ## Round-trip determinism
 
 The exporter emits:
+
 - Slides in document order.
 - Shapes in z-order (back-to-front).
 - Stable `shape-<n>` ids derived from shape index on first export; these ids are preserved across subsequent exports if `meta.json` is present.

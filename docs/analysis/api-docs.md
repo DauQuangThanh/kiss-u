@@ -301,7 +301,7 @@ CLI and the projects it scaffolds:
 |------|------|--------|-----------|
 | Project context | `.kiss/context.yml` | `schema_version: 1.0`; `paths.{docs,specs,plans,tasks,templates,scripts}`; `current.{feature,spec,plan,tasks,checklist,branch}`; `preferences.{output_format,task_numbering,confirm_before_write,auto_update_context}`; `language.{output,interaction}`; `integrations: [keys]` | `context.py:8-152` |
 | Init options | `.kiss/init-options.json` | flat object with `integration`, `integrations`, `branch_numbering`, `context_file`, `here`, `kiss_version`, `ai_skills` | `cli/init.py:441-455`; `config.py:10-19` |
-| Integration pointer | `.kiss/integration.json` | `{integration: str|null, integrations: list[str], version: str}` | `cli/init.py:319-326`; `installer.py:595-605` |
+| Integration pointer | `.kiss/integration.json` | `{integration: str or null, integrations: list[str], version: str}` | `cli/init.py:319-326`; `installer.py:595-605` |
 | Integration manifest | `.kiss/integrations/<key>.manifest.json` | `{key, version, installed_at, files: {rel_path: sha256}}` | `integrations/manifest.py:50-265` |
 | Asset checksums | `core_pack/sha256sums.txt` | `<sha256>  <rel-path>` per line, sorted | `scripts/generate-checksums.py:31-68` |
 

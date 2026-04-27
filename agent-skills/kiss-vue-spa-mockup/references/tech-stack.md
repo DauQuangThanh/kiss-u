@@ -33,9 +33,11 @@ to give the AI grounding on the exact tech stack being scaffolded.
 
 - PrimeVue v4 uses a theme preset system (`@primeuix/themes`).
 - The `Aura` preset is registered globally in `src/main.ts`:
+
   ```ts
   app.use(PrimeVue, { theme: { preset: Aura, options: { darkModeSelector: '.dark' } } })
   ```
+
 - `darkModeSelector: '.dark'` keeps PrimeVue's dark tokens in sync with
   the Tailwind dark-mode class toggle.
 - Icons: `primeicons` package — use `<i class="pi pi-<name>" />`.
@@ -77,9 +79,11 @@ to give the AI grounding on the exact tech stack being scaffolded.
 1. **Add a new view**: create `src/views/<Name>View.vue`, add an entry
    to `src/router/index.ts`, and add a `<RouterLink>` in `src/App.vue`.
 2. **Add a PrimeVue component**: import directly from `primevue/<component>`:
+
    ```ts
    import Button from 'primevue/button'
    ```
+
 3. **Add a store**: create `src/stores/<name>.ts` and export a
    `use<Name>Store` composable.
 4. **Mock API data**: place JSON files in `public/` and fetch them with

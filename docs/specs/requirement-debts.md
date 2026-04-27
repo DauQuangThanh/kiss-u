@@ -4,7 +4,7 @@
 > `RDEBT-NNN` ID, a one-line summary, the open question, the spec(s)
 > the debt surfaces in, related TDEBTs (if any), priority, and status.
 > New entries append; entries close by editing their **Status**.
-
+>
 > Generated 2026-04-26 by `business-analyst` (auto mode), seeded from
 > the reverse-engineering pass over the existing kiss-u codebase.
 
@@ -714,7 +714,7 @@
 - **Cross-link:** TDEBT-030 (architecture mirror),
   RDEBT-027 (installer compliance verification),
   RDEBT-032 / RDEBT-033 / RDEBT-034 (rename + style
-  + description prerequisites).
+  - description prerequisites).
 - **Priority:** 🔴 Blocking — every spec consumer
   reading the rule table will be confused until the
   source-side flip lands.

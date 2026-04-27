@@ -32,7 +32,7 @@
   `kiss init --here --force --ai <agent>`.
 - **Decision:** Spec `kiss-upgrade` describes the documented
   upgrade workflow as it works today (`kiss init --here --force`
-  + per-integration `kiss integration upgrade`). Logged the
+  - per-integration `kiss integration upgrade`). Logged the
   command-vs-doc gap as **RDEBT-001** so the human owner can
   decide whether to add a real `kiss upgrade` alias or rewrite
   the docs.
@@ -533,7 +533,7 @@
   references to role names are edited. Logged as
   RDEBT-032 (style) + RDEBT-033 (prefix), with
   TDEBT-030 covering the eventual source-side pass
-  + RDEBT-035 covering the spec/code divergence.
+  - RDEBT-035 covering the spec/code divergence.
 
 ## DEC-035 — Drop `kiss-` prefix policy for subagents (asymmetric with skills)
 
@@ -561,7 +561,7 @@
   - ADR-019's prefix rationale ("uninstall safety +
     installer manifest filter") applies only to
     skills because skill folders mix user-authored
-    + KISS bundles in the same dir. Subagent folders
+    - KISS bundles in the same dir. Subagent folders
     don't mix the same way today.
 - **Decision:** ADR-020 §9 explicitly KEEPs subagent
   names UNPREFIXED; the asymmetry with skills is

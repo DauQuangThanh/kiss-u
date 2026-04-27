@@ -54,10 +54,10 @@ rank is a recommendation; the human owner can reorder.
 
 Lower-priority but still tracked:
 
-6. **Performance** — the CLI is short-lived; throughput is not a
+1. **Performance** — the CLI is short-lived; throughput is not a
    driver. Step UI is `Rich`-rendered and human-facing, not
    contended.
-7. **Security of the installed tree** — addressed via SHA-256
+2. **Security of the installed tree** — addressed via SHA-256
    manifests (CADR-004) and by *not* executing arbitrary code at
    install time. Treated as a constraint, not a primary attribute.
 
