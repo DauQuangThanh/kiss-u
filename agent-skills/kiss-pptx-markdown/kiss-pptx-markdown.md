@@ -11,6 +11,33 @@ metadata:
 
 Translate between `.pptx` and an extended Markdown format.
 
+## Inputs
+
+- A `.pptx` file (for export to Markdown) **or** a `.md` file produced
+  by this skill (for rebuild to `.pptx`).
+- Optional sidecar `<name>.meta.json` and template `.pptx` produced on
+  the prior export — required for high-fidelity rebuild.
+- Optional environment variables for auto mode: `KISS_PPTX_OP`,
+  `KISS_PPTX_INPUT`, `KISS_PPTX_OUTPUT`, `KISS_PPTX_NO_META`,
+  `KISS_PPTX_TEMPLATE`.
+
+## Outputs
+
+- On export (`to-md`): `<name>.md`, `<name>.assets/` (extracted slide
+  media), `<name>.template.pptx`, and `<name>.meta.json` next to the
+  input unless `--no-meta` is passed.
+- On rebuild (`to-pptx`): the destination `.pptx` reconstructed from
+  the Markdown + sidecar + template.
+- On round-trip check: a diff of the original Markdown against
+  Markdown re-extracted from the rebuilt `.pptx`.
+- On `list-layouts`: a printout of slide layouts available in a
+  `.pptx` template.
+
+## Context Update
+
+Does not mutate `.kiss/context.yml`. Operates on user-supplied file
+paths only.
+
 ## User Input
 
 ```text

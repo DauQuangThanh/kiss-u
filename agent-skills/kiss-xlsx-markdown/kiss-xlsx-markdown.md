@@ -11,6 +11,32 @@ metadata:
 
 Round-trip translation between `.xlsx` and Markdown.
 
+## Inputs
+
+- An `.xlsx` file (for export to Markdown) **or** a `.md` file produced
+  by this skill (for rebuild to `.xlsx`).
+- Optional sidecar `<name>.meta.json` produced on the prior export —
+  required for high-fidelity rebuild (preserves formulas, formats,
+  merged cells, validations, charts, etc.).
+- Optional environment variables for auto mode: `KISS_XLSX_OP`,
+  `KISS_XLSX_INPUT`, `KISS_XLSX_OUTPUT`, `KISS_XLSX_VALUES_ONLY`,
+  `KISS_XLSX_NO_META`, `KISS_XLSX_RECALC`.
+
+## Outputs
+
+- On export (`to-md`): `<name>.md` (one Markdown table per sheet) and
+  `<name>.meta.json` next to the input unless `--no-meta` is passed.
+- On rebuild (`to-xlsx`): the destination `.xlsx` reconstructed from
+  the Markdown + sidecar.
+- On round-trip check: a diff of the original Markdown against
+  Markdown re-extracted from the rebuilt `.xlsx`.
+- On `recalc`: the workbook with cached formula values refreshed.
+
+## Context Update
+
+Does not mutate `.kiss/context.yml`. Operates on user-supplied file
+paths only.
+
 ## User Input
 
 ```text

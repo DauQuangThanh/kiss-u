@@ -11,6 +11,31 @@ metadata:
 
 Round-trip translation between `.docx` and Markdown.
 
+## Inputs
+
+- A `.docx` file (for export to Markdown) **or** a `.md` file produced by
+  this skill (for rebuild to `.docx`).
+- Optional sidecar `<name>.meta.json` and `<name>.reference.docx`
+  produced on the prior export — required for high-fidelity rebuild.
+- Optional environment variables for auto mode: `KISS_DOCX_OP`,
+  `KISS_DOCX_INPUT`, `KISS_DOCX_OUTPUT`, `KISS_DOCX_ACCEPT_CHANGES`,
+  `KISS_DOCX_NO_META`.
+
+## Outputs
+
+- On export (`to-md`): `<name>.md`, `<name>.assets/` (extracted media),
+  `<name>.reference.docx`, and `<name>.meta.json` next to the input
+  unless `--no-meta` is passed.
+- On rebuild (`to-docx`): the destination `.docx` reconstructed from
+  the Markdown + sidecar + reference doc.
+- On round-trip check: a diff of the original Markdown against
+  Markdown re-extracted from the rebuilt `.docx`.
+
+## Context Update
+
+Does not mutate `.kiss/context.yml`. Operates on user-supplied file
+paths only.
+
 ## User Input
 
 ```text
