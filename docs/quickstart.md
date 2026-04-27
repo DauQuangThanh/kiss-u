@@ -114,7 +114,7 @@ Continue refining as needed:
 ### Step 4: Validate the Specification
 
 ```markdown
-/kiss-checklist
+/kiss-feature-checklist
 ```
 
 ### Step 5: Generate the Technical Plan
