@@ -124,6 +124,7 @@ This skill does not mutate `.kiss/context.yml`.
 ## AI authoring scope
 
 **Does:**
+
 - Scaffold a runnable Vue 3 SPA with the tech stack below.
 - Ask the user (interactive) or apply defaults (auto) for output directory,
   app name, and view list.
@@ -133,6 +134,7 @@ This skill does not mutate `.kiss/context.yml`.
 - Log a `VUEDEV` debt entry per view that only has placeholder content.
 
 **Does not:**
+
 - Run `npm install` or start the dev server.
 - Generate full business-logic or API integration code.
 - Modify files outside `{KISS_VUE_SPA_OUTPUT_DIR}`.

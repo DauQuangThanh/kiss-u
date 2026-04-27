@@ -1,7 +1,7 @@
 {
   "integration": "copilot",
   "version": "0.3.0",
-  "installed_at": "2026-04-27T05:22:52.081049+00:00",
+  "installed_at": "2026-04-27T06:09:03.696981+00:00",
   "files": {
     ".github/skills/kiss-acceptance-criteria/SKILL.md": "aca70f0a85f6d5cecc90df28dd3cc9b5c0204ecd936d7ba19d77309ddeb47c27",
     ".github/skills/kiss-acceptance-criteria/scripts/bash/common.sh": "c954fd3801ccf4069e51b938884a1565dd9bcb49fe8f9bcc23f290a13bfde35d",
@@ -213,7 +213,7 @@
     ".github/skills/kiss-quality-review/scripts/powershell/common.ps1": "db35bad4444b2f0bc7b95fbdd8db8e60d7788776b97fda9a0a8a266811d01532",
     ".github/skills/kiss-quality-review/scripts/powershell/review.ps1": "171f659dfaba39df182c938d02cb0bc7f18e0dbaa61073aadce0606ab7a73486",
     ".github/skills/kiss-quality-review/templates/quality-review-template.md": "a4ce8fdb2612887a22ecd372f995d1fe324ca8b77f2f752a030aec9f89368b82",
-    ".github/skills/kiss-react-spa-mockup/SKILL.md": "cb87292284895b28587a56887ea38a98717c382e889998d9be5b87ea09ec1780",
+    ".github/skills/kiss-react-spa-mockup/SKILL.md": "fa583fb85af381648326375717bb3b44b6b6c6b3a51cde004ab50dca02621629",
     ".github/skills/kiss-react-spa-mockup/scripts/bash/common.sh": "c954fd3801ccf4069e51b938884a1565dd9bcb49fe8f9bcc23f290a13bfde35d",
     ".github/skills/kiss-react-spa-mockup/scripts/bash/scaffold-spa.sh": "849bfbccaf65d6249d4600ef22477d550bd64cd601a5781c0f0bb13cfa9e1050",
     ".github/skills/kiss-react-spa-mockup/scripts/powershell/scaffold-spa.ps1": "e635907b360cda1fe0f80364065774d405d7cfa05120c410ec62d22eb9d9e1cf",
@@ -371,7 +371,7 @@
     ".github/skills/kiss-verify-tasks/scripts/bash/check-prerequisites.sh": "16e7515a1b1237fef552b6229326816874329d9352fa6dade27c7aab84e91b8b",
     ".github/skills/kiss-verify-tasks/scripts/powershell/check-prerequisites.ps1": "9ba7ca0450769e5df7d8ec836ee14e639d50a0818c19f520872563ffbed47ad9",
     ".github/skills/kiss-verify-tasks/scripts/powershell/common.ps1": "af5235bf8aa06f838226cbf477877a41d2fee8c91bf8f2d14b610e6567315313",
-    ".github/skills/kiss-vue-spa-mockup/SKILL.md": "4910e701483e2072822577824105ea70e615ef35a74dcf70d1ffb97fe3ae3ec8",
+    ".github/skills/kiss-vue-spa-mockup/SKILL.md": "c964c68fc32c7df9d3fc01e8519149879aa3a62beaa93f0c4e81ecdfbfe9820e",
     ".github/skills/kiss-vue-spa-mockup/scripts/bash/common.sh": "c954fd3801ccf4069e51b938884a1565dd9bcb49fe8f9bcc23f290a13bfde35d",
     ".github/skills/kiss-vue-spa-mockup/scripts/bash/scaffold-vue-spa.sh": "2366a5043da434d60ad45cfd6646e730a4a8b1f208f6065a99a60318df5e521a",
     ".github/skills/kiss-vue-spa-mockup/scripts/powershell/scaffold-vue-spa.ps1": "c1b8612629981583c0005a3213a924c0712b164759681b4825e01c4e6baa7702",
