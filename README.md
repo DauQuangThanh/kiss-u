@@ -8,10 +8,10 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/DauQuangThanh/kiss-u/releases/latest"><img src="https://img.shields.io/github/v/release/DauQuangThanh/kiss" alt="Latest Release"/></a>
-    <a href="https://github.com/DauQuangThanh/kiss-u/stargazers"><img src="https://img.shields.io/github/stars/DauQuangThanh/kiss?style=social" alt="GitHub Stars"/></a>
-    <a href="https://github.com/DauQuangThanh/kiss-u/blob/main/LICENSE"><img src="https://img.shields.io/github/license/DauQuangThanh/kiss" alt="License"/></a>
-    <a href="https://dauquangthanh.github.io/kiss/"><img src="https://img.shields.io/badge/docs-GitHub_Pages-blue" alt="Documentation"/></a>
+    <a href="https://github.com/DauQuangThanh/kiss-u/releases/latest"><img src="https://img.shields.io/github/v/release/DauQuangThanh/kiss-u" alt="Latest Release"/></a>
+    <a href="https://github.com/DauQuangThanh/kiss-u/stargazers"><img src="https://img.shields.io/github/stars/DauQuangThanh/kiss-u?style=social" alt="GitHub Stars"/></a>
+    <a href="https://github.com/DauQuangThanh/kiss-u/blob/main/LICENSE"><img src="https://img.shields.io/github/license/DauQuangThanh/kiss-u" alt="License"/></a>
+    <a href="https://dauquangthanh.github.io/kiss-u/"><img src="https://img.shields.io/badge/docs-GitHub_Pages-blue" alt="Documentation"/></a>
     <img src="https://img.shields.io/badge/skills-50%2B-brightgreen" alt="50+ Skills"/>
     <img src="https://img.shields.io/badge/role_agents-14-blue" alt="14 Role Agents"/>
     <img src="https://img.shields.io/badge/AI_providers-7-purple" alt="7 AI Providers"/>

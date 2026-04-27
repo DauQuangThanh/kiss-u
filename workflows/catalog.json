@@ -8,7 +8,7 @@
       "description": "Runs specify \u2192 plan \u2192 taskify \u2192 implement with review gates",
       "author": "GitHub",
       "version": "1.0.0",
-      "url": "https://raw.githubusercontent.com/DauQuangThanh/kiss/main/workflows/kiss/workflow.yml",
+      "url": "https://raw.githubusercontent.com/DauQuangThanh/kiss-u/main/workflows/kiss/workflow.yml",
       "tags": ["sdd", "full-cycle"]
     }
   }

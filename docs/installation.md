@@ -10,7 +10,7 @@
 
 ## Installation
 
-> **Important:** The only official, maintained packages for kiss come from the [DauQuangThanh/kiss](https://github.com/DauQuangThanh/kiss-u) GitHub repository. Any packages with the same name available on PyPI (e.g. `kiss` on pypi.org) are **not** affiliated with this project and are not maintained by the kiss maintainers. For normal installs, use the GitHub-based commands shown below. For offline or air-gapped environments, locally built wheels created from this repository are also valid.
+> **Important:** The only official, maintained packages for kiss come from the [DauQuangThanh/kiss-u](https://github.com/DauQuangThanh/kiss-u) GitHub repository. Any packages with the same name available on PyPI (e.g. `kiss` on pypi.org) are **not** affiliated with this project and are not maintained by the kiss maintainers. For normal installs, use the GitHub-based commands shown below. For offline or air-gapped environments, locally built wheels created from this repository are also valid.
 
 ### Initialize a New Project
 

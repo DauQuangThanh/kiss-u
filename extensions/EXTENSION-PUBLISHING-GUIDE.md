@@ -154,7 +154,7 @@ Edit `extensions/catalog.community.json` and add your extension:
 {
   "schema_version": "1.0",
   "updated_at": "2026-01-28T15:54:00Z",
-  "catalog_url": "https://raw.githubusercontent.com/DauQuangThanh/kiss/main/extensions/catalog.community.json",
+  "catalog_url": "https://raw.githubusercontent.com/DauQuangThanh/kiss-u/main/extensions/catalog.community.json",
   "extensions": {
     "your-extension": {
       "name": "Your Extension Name",
