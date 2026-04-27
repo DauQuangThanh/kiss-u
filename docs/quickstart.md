@@ -189,3 +189,33 @@ See the [Role Agents section of the README](../README.md#role-agents) for the fu
 - Read the [complete methodology](https://github.com/DauQuangThanh/kiss-u/blob/main/spec-driven.md) for in-depth guidance.
 - Browse the [source on GitHub](https://github.com/DauQuangThanh/kiss-u).
 - Explore [extensions](reference/extensions.md), [presets](reference/presets.md), and [workflows](reference/workflows.md) to extend KISS.
+
+## Waterfall and Large-Project Workflows
+
+For formal delivery lifecycles — government contracts, regulated industries, or any project requiring phase gates and formal sign-offs — KISS provides an additional set of commands on top of the core SDD flow:
+
+| Stage | Commands |
+|---|---|
+| Requirements formalisation | `/kiss-srs` (IEEE 29148:2018 SRS), `/kiss-wbs-decompose` (WBS → feature stubs) |
+| Traceability | `/kiss-traceability-matrix` (FR/NFR → design → tasks → tests → bugs) |
+| Phase gates | `/kiss-phase-gate` (SRR, CDR, TRR, ORR, go-live checklists) |
+| Baselines | `/kiss-baseline` (immutable snapshot with SHA-256 manifest + git tag) |
+| Testing | `/kiss-uat-plan` (business UAT plan with sponsor sign-off) |
+| Go-live | `/kiss-handover` (runbook index, L1/L2/L3 escalation, training), `/kiss-data-migration-plan` (migration strategy, field mapping, cutover runbook) |
+
+A typical Waterfall sequence on top of the six-step SDD flow:
+
+```text
+/kiss-srs                   → produce SRS from all feature specs
+/kiss-phase-gate requirements → SRR gate: confirm SRS is complete
+/kiss-traceability-matrix   → build RTM before coding starts
+/kiss-phase-gate architecture → CDR gate: confirm design is approved
+/kiss-baseline design       → freeze the design baseline
+/kiss-uat-plan              → draft UAT plan while development is underway
+/kiss-phase-gate ttr        → TRR gate: confirm test readiness
+/kiss-data-migration-plan   → plan data migration (if applicable)
+/kiss-phase-gate orr        → ORR gate: confirm ops readiness
+/kiss-handover              → produce hand-over package
+/kiss-baseline release      → freeze the release baseline
+/kiss-phase-gate go-live    → final gate before go-live
+```

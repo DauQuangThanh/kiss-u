@@ -16,8 +16,8 @@ Usage from a script (call before any third-party imports):
         from pathlib import Path
         import sys
         sys.path.insert(0, str(Path(__file__).parent))
-        from _venv_bootstrap import ensure_env
-        ensure_env(__file__, skill_name="kiss-pptx-markdown")
+        from venv_bootstrap import ensure_env
+        ensure_env(__file__, skill_name="kiss-docx-markdown")
 
 Behaviour:
 
@@ -75,9 +75,9 @@ def _setup_hint(skill_name: str) -> str:
         "not pollute your system Python install.\n\n"
         "Set one up by running the bootstrap helper for this skill:\n\n"
         "  macOS / Linux (bash):\n"
-        "    bash <skill-dir>/scripts/setup_env.sh\n\n"
+        "    bash <skill-dir>/scripts/bash/setup_env.sh\n\n"
         "  Windows (PowerShell):\n"
-        "    pwsh <skill-dir>\\scripts\\setup_env.ps1\n\n"
+        "    pwsh <skill-dir>\\scripts\\powershell\\setup_env.ps1\n\n"
         "Then re-run your command. The .venv will be created in the current\n"
         "working directory.\n\n"
         f"If you really want to run against the system Python, pass {SYSTEM_PYTHON_FLAG}.\n"

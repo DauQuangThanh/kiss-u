@@ -98,6 +98,10 @@ already taken.
   `{context.paths.docs}/testing/<feature>/execution.md`.
 - **`kiss-bug-report`** — create
   `{context.paths.docs}/bugs/BUG-NNN-<slug>.md` (auto-numbered).
+- **`kiss-regression-tests`** — maintain the regression test index
+  at `{context.paths.docs}/testing/regression-index.md`. The bug-fixer
+  writes the test code; the tester owns the index and validates
+  each entry runs in CI.
 
 ## Inputs (from `.kiss/context.yml`)
 
@@ -105,6 +109,7 @@ already taken.
 - `paths.docs/product/acceptance.md`
 - `paths.docs/testing/<feature>/strategy.md` (test-architect)
 - `paths.docs/testing/<feature>/framework.md` (test-architect)
+- `paths.docs/analysis/uat-plan/<feature>/uat-plan.md` (business-analyst)
 - `paths.docs/design/<feature>/**` (developer)
 - `current.feature`
 
@@ -115,19 +120,23 @@ already taken.
 | `{context.paths.docs}/testing/<feature>/test-cases.md` | `kiss-test-cases` |
 | `{context.paths.docs}/testing/<feature>/execution.md` | `kiss-test-execution` |
 | `{context.paths.docs}/bugs/BUG-NNN-<slug>.md` | `kiss-bug-report` |
-| `{context.paths.docs}/testing/<feature>/test-debts.md` | all three (append) |
+| `{context.paths.docs}/testing/regression-index.md` | `kiss-regression-tests` |
+| `{context.paths.docs}/testing/<feature>/test-debts.md` | all (append) |
 
 ## Handover contracts
 
 **Reads from:**
 
 - test-architect → strategy + framework + quality gates
+- business-analyst → UAT plan (`analysis/uat-plan/<feature>/uat-plan.md`)
+  for UAT scope, entry criteria, and test scenarios
 - developer → design, API contract, unit-tests-index
 - product-owner → acceptance criteria
 
 **Writes for:**
 
-- bug-fixer → bug files are the input to triage + fix
+- bug-fixer → bug files are the input to triage + fix;
+  regression test code authored by bug-fixer is indexed here
 - project-manager → `execution.extract` feeds status reports
 - code-security-reviewer → high-severity security bugs route here
 

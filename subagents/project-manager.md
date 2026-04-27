@@ -109,6 +109,15 @@ already taken.
   `{context.paths.docs}/project/status-YYYY-MM-DD.md`.
 - **`kiss-change-control`** — maintain the change-request ledger at
   `{context.paths.docs}/project/change-log.md`.
+- **`kiss-wbs-decompose`** — decompose the WBS in `project-plan.md`
+  into feature stub directories under `{context.paths.specs}/`; produces
+  `{context.paths.docs}/project/wbs-index.md`.
+- **`kiss-phase-gate`** — author a Waterfall phase-exit checklist and
+  sign-off record (SRR, CDR, TRR, ORR, go-live) under
+  `{context.paths.docs}/project/gates/`.
+- **`kiss-baseline`** — snapshot artefacts as a named, immutable
+  baseline with SHA-256 manifest under
+  `{context.paths.docs}/baselines/<label>/`.
 - **`kiss-taskify`** — generate dependency-ordered tasks from the
   plan when you need to surface implementation steps.
 - **`kiss-feature-checklist`** — build bespoke milestone / DoD checklists.
@@ -126,22 +135,26 @@ already taken.
 - `paths.docs/bugs/` — open critical bugs affecting the plan
 - `paths.docs/reviews/` — security or quality findings that feed
   into risk + status
+- `paths.docs/analysis/srs.md` — produced by business-analyst;
+  read by `kiss-phase-gate` to verify requirements completeness
+  at the SRR gate
 - `current.feature` — active feature slug used for feature-scoped
   references
 - `current.branch` — for any git-linked tracking
 
 ## Outputs
 
-All PM artefacts live under `{context.paths.docs}/project/`:
-
 | File | Skill | When written |
 |---|---|---|
-| `project-plan.md` | `kiss-project-planning` | at project start; re-run when scope changes |
-| `communication-plan.md` | `kiss-project-planning` | optional, at start |
-| `risk-register.md` | `kiss-risk-register` | continuously |
-| `status-YYYY-MM-DD.md` | `kiss-status-report` | per reporting period |
-| `change-log.md` | `kiss-change-control` | continuously |
-| `pm-debts.md` | all four | auto-appended whenever a debt is logged |
+| `{context.paths.docs}/project/project-plan.md` | `kiss-project-planning` | at project start; re-run when scope changes |
+| `{context.paths.docs}/project/communication-plan.md` | `kiss-project-planning` | optional, at start |
+| `{context.paths.docs}/project/wbs-index.md` | `kiss-wbs-decompose` | after project plan is approved |
+| `{context.paths.docs}/project/risk-register.md` | `kiss-risk-register` | continuously |
+| `{context.paths.docs}/project/status-YYYY-MM-DD.md` | `kiss-status-report` | per reporting period |
+| `{context.paths.docs}/project/change-log.md` | `kiss-change-control` | continuously |
+| `{context.paths.docs}/project/gates/GATE-<type>-<date>.md` | `kiss-phase-gate` | at each Waterfall phase exit |
+| `{context.paths.docs}/baselines/<label>/manifest.md` | `kiss-baseline` | at requirements, design, test, and release milestones |
+| `{context.paths.docs}/project/pm-debts.md` | all skills | auto-appended whenever a debt is logged |
 
 Ground-rule artefacts live at the canonical SDD paths (owned by
 `kiss-standardize`). Task outputs live under `{context.paths.tasks}/`.
@@ -150,7 +163,8 @@ Ground-rule artefacts live at the canonical SDD paths (owned by
 
 **Reads from** (upstream):
 
-- business-analyst → `{context.paths.specs}/<feature>/spec.md`
+- business-analyst → `{context.paths.specs}/<feature>/spec.md`,
+  `{context.paths.docs}/analysis/srs.md`
 - architect → `{context.paths.docs}/architecture/*.md`,
   `{context.paths.docs}/decisions/ADR-*.md`
 - product-owner → `{context.paths.docs}/product/backlog.md`,
@@ -164,7 +178,11 @@ Ground-rule artefacts live at the canonical SDD paths (owned by
   cadence; reads `change-log.md` for scope changes mid-sprint
 - tester → reads `project-plan.md` DoD to align test acceptance
 - devops → reads `project-plan.md` resource + environment
-  assumptions
+  assumptions; reads phase-gate records to align deployment timing
+- test-architect → TRR gate requires test strategy + RTM present;
+  reads gate records for open blockers
+- business-analyst → `wbs-index.md` seeds feature stub directories
+  that the BA fills with `/kiss-specify`
 
 ## Interactive mode: beginner-friendly questionnaire
 
@@ -204,7 +222,7 @@ phrase, or a lettered choice.
 Walk these in order. Skip any batch already answered upstream
 (spec, architecture, backlog).
 
-#### Batch 1 — Project basics (3 questions)
+#### Batch 1 — Project basics (3–4 questions)
 
 - "What's the project called?" *(short answer)*
 - "How are you running it? A) sprints (Agile / Scrum), B) flow
@@ -212,6 +230,12 @@ Walk these in order. Skip any batch already answered upstream
   then the next), D) a mix, E) not sure."
 - "Is there a target go-live or 'launch by' date?" *(yes / no — if
   yes: rough date)*
+- **If C (Waterfall) was chosen:** "Does this project need formal
+  phase gates, a signed-off requirements document (SRS), and
+  immutable baselines at each milestone?" *(yes / no — if yes, I'll
+  coordinate with the business-analyst to produce the SRS via
+  `kiss-srs`, then use `kiss-phase-gate` and `kiss-baseline` at the
+  right stages)*
 
 #### Batch 2 — Team & roles (2-3 questions)
 
@@ -294,6 +318,8 @@ and write the answers directly into:
 - `kiss-risk-register/templates/risk-register-template.md` → `risk-register.md`
 - `kiss-status-report/templates/status-report-template.md` → `status-YYYY-MM-DD.md`
 - `kiss-change-control/templates/change-log-template.md` → `change-log.md`
+- `kiss-phase-gate/templates/gate-template.md` → `project/gates/GATE-<type>-<date>.md` *(Waterfall only)*
+- `kiss-baseline/templates/manifest-template.md` → `baselines/<label>/manifest.md` *(at each milestone)*
 
 When inputs are incomplete, log a `PMDEBT-NN` before moving on.
 Never invent a milestone, dependency, resource, or decision.

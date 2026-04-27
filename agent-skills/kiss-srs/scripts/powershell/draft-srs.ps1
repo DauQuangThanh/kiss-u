@@ -16,7 +16,7 @@ if ($Help) {
 Usage: draft-srs.ps1 [-Auto] [-Answers FILE] [-DryRun] [-Help]
 
 Aggregates all feature specs into a consolidated SRS document at
-docs/architecture/srs.md. Numbers every FR and NFR.
+docs/analysis/srs.md. Numbers every FR and NFR.
 
 Answer keys: SRS_TITLE, SRS_REVISION, SRS_AUDIENCE,
              SRS_INCLUDE_TRACE_STUB.

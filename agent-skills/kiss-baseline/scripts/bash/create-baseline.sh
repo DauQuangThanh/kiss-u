@@ -66,11 +66,11 @@ DOCS="$KISS_REPO_ROOT/$KISS_DOCS_DIR"
 SPECS="$KISS_REPO_ROOT/$KISS_SPECS_DIR"
 case "$BTYPE" in
     requirements)
-        [ -f "$DOCS/architecture/srs.md" ] && FILE_LIST+=("$DOCS/architecture/srs.md")
+        [ -f "$DOCS/analysis/srs.md" ] && FILE_LIST+=("$DOCS/analysis/srs.md")
         while IFS= read -r -d '' f; do FILE_LIST+=("$f"); done < <(find "$SPECS" -name "spec.md" -print0 2>/dev/null || true)
         ;;
     design)
-        [ -f "$DOCS/architecture/srs.md" ] && FILE_LIST+=("$DOCS/architecture/srs.md")
+        [ -f "$DOCS/analysis/srs.md" ] && FILE_LIST+=("$DOCS/analysis/srs.md")
         while IFS= read -r -d '' f; do FILE_LIST+=("$f"); done < <(find "$DOCS/design" -name "*.md" -print0 2>/dev/null || true)
         while IFS= read -r -d '' f; do FILE_LIST+=("$f"); done < <(find "$DOCS/decisions" -name "*.md" -print0 2>/dev/null || true)
         ;;

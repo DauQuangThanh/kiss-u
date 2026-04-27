@@ -62,8 +62,8 @@ decisions.
 ## Inputs
 
 - `.kiss/context.yml`
-- `{context.paths.docs}/architecture/srs.md` — requirements baseline
-- `{context.paths.docs}/architecture/srs.extract` — SRS_REVISION
+- `{context.paths.docs}/analysis/srs.md` — requirements baseline
+- `{context.paths.docs}/analysis/srs.extract` — SRS_REVISION
 - `{context.paths.docs}/analysis/traceability-matrix.extract` —
   COVERAGE_PCT, UNCOVERED_REQS (for requirements and ttr gates)
 - `{context.paths.docs}/project/project-plan.md` — WBS, milestones,

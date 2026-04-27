@@ -9,7 +9,7 @@ from pathlib import Path
 # venv ensures the subprocess calls below also use the venv's Python.
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent))
-    from _venv_bootstrap import ensure_env  # noqa: E402
+    from venv_bootstrap import ensure_env  # noqa: E402
     ensure_env(__file__, skill_name="kiss-docx-markdown")
 
 import argparse  # noqa: E402

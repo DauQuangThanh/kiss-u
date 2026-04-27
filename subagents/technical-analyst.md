@@ -127,7 +127,10 @@ already taken.
 
 - architect → extracted.md + candidate ADRs seed the architect's
   backlog
-- developer → api-docs + dep map inform refactoring priorities
+- developer → api-docs (extracted from existing code) inform
+  refactoring priorities; **for new APIs the developer authors
+  the contract first — the analyst validates it matches the
+  implementation**
 - code-security-reviewer → extracted container diagram drives
   STRIDE
 - code-quality-reviewer → dep map highlights fan-in hotspots

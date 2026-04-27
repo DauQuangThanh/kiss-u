@@ -98,11 +98,17 @@ already taken.
   `{context.paths.docs}/testing/<feature>/framework.md`.
 - **`kiss-quality-gates`** — write
   `{context.paths.docs}/testing/<feature>/quality-gates.md`.
+- **`kiss-traceability-matrix`** — build the Requirements Traceability
+  Matrix (RTM) linking FR-NNN/NFR-NNN → design → tasks → test cases
+  → bugs at `{context.paths.docs}/analysis/traceability-matrix.md`.
+  Run after `kiss-srs` produces the SRS.
 
 ## Inputs (from `.kiss/context.yml`)
 
 - `paths.specs/<feature>/spec.md`
 - `paths.docs/architecture/intake.md`, `c4-container.md`
+- `paths.docs/analysis/srs.md` — source of FR-NNN/NFR-NNN IDs
+  for the RTM (produced by business-analyst with `kiss-srs`)
 - `paths.docs/project/risk-register.md`
 - `current.feature`
 
@@ -113,7 +119,8 @@ already taken.
 | `{context.paths.docs}/testing/<feature>/strategy.md` | `kiss-test-strategy` |
 | `{context.paths.docs}/testing/<feature>/framework.md` | `kiss-test-framework` |
 | `{context.paths.docs}/testing/<feature>/quality-gates.md` | `kiss-quality-gates` |
-| `{context.paths.docs}/testing/<feature>/test-debts.md` | all three (append) |
+| `{context.paths.docs}/analysis/traceability-matrix.md` | `kiss-traceability-matrix` |
+| `{context.paths.docs}/testing/<feature>/test-debts.md` | all skills (append) |
 
 ## Handover contracts
 
@@ -125,11 +132,16 @@ already taken.
 
 **Writes for:**
 
-- tester → strategy + framework drive test-case authoring
+- tester → strategy + framework drive test-case authoring; reads
+  `traceability-matrix.md` for coverage gaps before test execution
+- business-analyst → reads `traceability-matrix.md` to verify
+  all FR/NFR have UAT coverage before drafting the UAT plan
 - developer → framework choice drives unit-test skeletons
 - code-quality-reviewer / code-security-reviewer → gates define
   the checks
 - devops → gates shape CI pipeline stages
+- project-manager → reads `traceability-matrix.md` at TRR gate to
+  confirm every requirement is covered
 
 ## Interactive mode: beginner-friendly questionnaire
 
@@ -225,6 +237,16 @@ trade-offs. Example (unit tests):
 - "Need a **test database** that gets reset between runs?"
   *(yes / no — recommend yes for integration / e2e)*
 
+#### Batch 6 — Formal lifecycle (1 question)
+
+- "Is this a formal delivery — Waterfall, government, regulated
+  industry, or a contract that requires sign-off?" *(yes / no — if
+  yes: I'll produce a Requirements Traceability Matrix
+  (`/kiss-traceability-matrix`) linking every requirement to its
+  test. The UAT plan is authored by the business-analyst —
+  recommend running `/business-analyst` with `kiss-uat-plan`
+  once the RTM is complete)*
+
 ### Translating answers into the artefacts
 
 | Batch | Artefact section it feeds |
@@ -234,6 +256,7 @@ trade-offs. Example (unit tests):
 | 3     | `framework.md` per-level recommendation |
 | 4     | `quality-gates.md` thresholds |
 | 5     | `strategy.md` Environments + Entry/Exit |
+| 6     | `traceability-matrix.md` (if formal lifecycle); UAT plan → business-analyst |
 
 For every `not sure` / `skip` / sensible-default answer:
 
@@ -252,6 +275,8 @@ write the answers directly into:
   `framework.md`
 - `kiss-quality-gates/templates/gates-template.md` →
   `quality-gates.md`
+- `kiss-traceability-matrix/templates/rtm-template.md` →
+  `analysis/traceability-matrix.md`
 
 ## Debt register
 

@@ -100,6 +100,15 @@ already taken.
   alert and dashboard starters.
 - **`kiss-deployment-strategy`** — write `{context.paths.docs}/operations/deployment.md` plus
   the release-notes template.
+- **`kiss-handover`** — draft the operations/support hand-over package
+  at `{context.paths.docs}/operations/handover/handover-package.md`.
+  Includes runbook index, L1/L2/L3 escalation matrix, training
+  checklist, warranty/hypercare period, and sign-off table.
+- **`kiss-data-migration-plan`** — draft the cutover runbook at
+  `{context.paths.docs}/operations/migration-runbook.md`. The
+  migration strategy and field mapping are authored by the
+  business-analyst; DevOps translates them into a step-by-step
+  technical runbook (cutover sequence, verification, rollback).
 
 ## Inputs (from `.kiss/context.yml`)
 
@@ -107,6 +116,12 @@ already taken.
   compliance)
 - `paths.docs/architecture/c4-container.md` (compute + network
   topology)
+- `paths.docs/analysis/srs.md` — data entities and volumes for
+  migration planning (produced by business-analyst with `kiss-srs`)
+- `paths.docs/analysis/data-migration-plan.md` — migration strategy
+  authored by business-analyst; DevOps translates to runbook
+- `paths.docs/analysis/field-mapping.md` — field mapping table
+  authored by business-analyst
 - `paths.docs/testing/*/quality-gates.md` (CI gate thresholds)
 - `paths.docs/bugs/change-register.md` (release notes seed)
 
@@ -119,6 +134,8 @@ already taken.
 | `{context.paths.docs}/operations/containers.md` + `assets/Dockerfile.sample` + `assets/compose.sample.yml` | `kiss-containerization` |
 | `{context.paths.docs}/operations/monitoring.md` + `assets/alerts.sample.yml` + `assets/dashboard.sample.json` | `kiss-observability-plan` |
 | `{context.paths.docs}/operations/deployment.md` + per-release notes | `kiss-deployment-strategy` |
+| `{context.paths.docs}/operations/handover/handover-package.md` + `runbook-index.md` + `support-escalation.md` + `training-checklist.md` | `kiss-handover` |
+| `{context.paths.docs}/operations/migration-runbook.md` | `kiss-data-migration-plan` |
 | `{context.paths.docs}/operations/ops-debts.md` | all (append) |
 
 ## Handover contracts
@@ -127,11 +144,16 @@ already taken.
 
 - architect → C4 + intake + ADRs
 - test-architect → quality gates
+- business-analyst → `analysis/srs.md` (data entities for migration);
+  `analysis/data-migration-plan.md` + `field-mapping.md` (BA
+  authors these; DevOps translates them into the runbook)
 - code-security-reviewer → security findings affecting infra
 
 **Writes for:**
 
-- project-manager → deployment model shapes release milestones
+- project-manager → deployment model shapes release milestones;
+  reads `handover-package.md` to confirm ops readiness at ORR /
+  go-live gate
 - bug-fixer / tester → runbook + rollback procedure
 - code-security-reviewer → CI/CD + infra configs are in review
   scope
@@ -250,6 +272,19 @@ artefacts (architecture, intake, prior ADRs).
   B) git-encrypted (SOPS / sealed-secrets), C) environment vars
   set by hand, D) not sure — recommend A; never C in production)*
 
+#### Batch 7 — Go-live / handover (2 questions)
+
+- "Does this project need a formal handover to an operations or
+  support team after go-live?" *(yes / no — recommend yes for any
+  production system with SLA commitments; if yes: I'll produce a
+  hand-over package with runbook index, escalation matrix, and
+  training checklist)*
+- "Is there a legacy system with data that needs to be migrated to
+  the new system?" *(yes / no — if yes: the business-analyst
+  should author the migration strategy and field mapping first
+  via `kiss-data-migration-plan`; I'll then translate those into
+  a technical cutover runbook)*
+
 ### Translating answers into the artefacts
 
 | Batch | Artefact it feeds |
@@ -260,6 +295,7 @@ artefacts (architecture, intake, prior ADRs).
 | 4     | `deployment.md` (runbook, rollback) |
 | 5     | `monitoring.md` + alert + dashboard starters |
 | 6     | `infra.md` compliance + secrets section |
+| 7     | `operations/handover/` package (if handover) + `operations/migration-runbook.md` (if migration, after BA authors the plan) |
 
 For every `not sure` / `skip` / sensible-default answer:
 
@@ -280,6 +316,12 @@ write the answers directly into:
   `monitoring.md`
 - `kiss-deployment-strategy/templates/deployment-template.md` →
   `deployment.md`
+- `kiss-handover/templates/handover-package-template.md` →
+  `operations/handover/handover-package.md`
+- `kiss-data-migration-plan/templates/dm-runbook-template.md` →
+  `operations/migration-runbook.md` *(requires BA to author
+  `analysis/data-migration-plan.md` and `analysis/field-mapping.md`
+  first)*
 
 ## Debt register
 

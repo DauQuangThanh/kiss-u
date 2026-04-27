@@ -92,6 +92,20 @@ already taken.
   `{context.paths.specs}/<feature>/spec.md`.
 - **`kiss-clarify-specs`** — identify underspecified areas in an existing
   spec and ask up to 5 targeted clarifying questions.
+- **`kiss-srs`** — aggregate all `spec.md` files into an IEEE
+  29148:2018-aligned SRS at `{context.paths.docs}/analysis/srs.md`.
+  Run when all feature specs are approved (Waterfall / regulated
+  projects), before architecture design begins.
+- **`kiss-uat-plan`** — draft the business-workflow-level UAT plan
+  at `{context.paths.docs}/analysis/uat-plan/<feature>/uat-plan.md`
+  and the acceptance sign-off ledger at
+  `{context.paths.docs}/analysis/uat-plan/<feature>/uat-sign-off.md`.
+  Run after `kiss-srs` and `kiss-traceability-matrix` are complete.
+- **`kiss-data-migration-plan`** — draft the migration strategy and
+  scope at `{context.paths.docs}/analysis/data-migration-plan.md`
+  and the field mapping at
+  `{context.paths.docs}/analysis/field-mapping.md`. DevOps
+  translates these into the cutover runbook.
 
 ## Inputs (from `.kiss/context.yml`)
 
@@ -107,6 +121,19 @@ already taken.
   requirements, user stories, acceptance criteria, edge cases.
 - `{context.paths.specs}/requirement-debts.md` — one file project-wide
   listing unresolved requirement questions (`RDEBT-NN`).
+- `{context.paths.docs}/analysis/srs.md` — consolidated SRS with
+  all functional requirements (FR-NNN) and non-functional
+  requirements (NFR-NNN) numbered and traced to source specs.
+  Produced by `kiss-srs` on Waterfall / regulated projects.
+- `{context.paths.docs}/analysis/uat-plan/<feature>/uat-plan.md` —
+  business-workflow UAT plan scoped to the active feature.
+  Produced by `kiss-uat-plan` on Waterfall / regulated projects.
+- `{context.paths.docs}/analysis/uat-plan/<feature>/uat-sign-off.md`
+  — acceptance sign-off ledger for UAT completion.
+- `{context.paths.docs}/analysis/data-migration-plan.md` — migration
+  strategy and scope. Produced by `kiss-data-migration-plan`.
+- `{context.paths.docs}/analysis/field-mapping.md` — source-to-
+  target field mapping table.
 
 ## Handover contracts
 
@@ -115,9 +142,17 @@ already taken.
 - architect → reads `{context.paths.specs}/<feature>/spec.md` to
   derive technology intake and NFRs
 - developer → reads the spec + NFRs to draft detailed design
-- test-architect → reads the spec to shape test strategy
+- test-architect → reads the spec to shape test strategy; reads
+  `analysis/srs.md` for FR-NNN/NFR-NNN IDs to build the RTM
 - product-owner → reads user stories for backlog + acceptance
-- project-manager → reads scope statements for planning
+- project-manager → reads scope statements for planning; reads
+  `analysis/srs.md` at the SRR phase gate
+- devops → reads `analysis/srs.md` for data entities and volumes
+  in migration planning; reads `analysis/data-migration-plan.md`
+  and `analysis/field-mapping.md` to translate into the cutover
+  runbook
+- tester → reads `analysis/uat-plan/<feature>/uat-plan.md` for
+  UAT scope and entry criteria
 
 **Reads when present:**
 
@@ -125,6 +160,9 @@ already taken.
   technical feasibility before tightening NFR wording
 - product-owner's `{context.paths.docs}/product/backlog.md` — for
   priority context when asking clarification questions
+- test-architect's `{context.paths.docs}/analysis/traceability-matrix.md`
+  — to verify all requirements have test coverage before
+  finalising the UAT scope
 
 ## Requirements-update workflow
 

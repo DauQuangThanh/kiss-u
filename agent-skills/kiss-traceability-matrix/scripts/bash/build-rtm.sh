@@ -24,7 +24,7 @@ SKILL_DIR="$(CDPATH="" cd "$SCRIPT_DIR/../.." && pwd)"
 ANALYSIS_DIR=$(worktype_dir "analysis")
 OUT="$ANALYSIS_DIR/traceability-matrix.md"
 DEBTS="$ANALYSIS_DIR/rtm-debts.md"
-SRS="$KISS_REPO_ROOT/$KISS_DOCS_DIR/architecture/srs.md"
+SRS="$KISS_REPO_ROOT/$KISS_DOCS_DIR/analysis/srs.md"
 
 THRESHOLD=$(resolve_auto RTM_COVERAGE_THRESHOLD "80") || true
 INCL_NFRS=$(resolve_auto RTM_INCLUDE_NFRS "true") || true

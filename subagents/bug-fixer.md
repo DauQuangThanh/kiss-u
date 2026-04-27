@@ -123,7 +123,6 @@ already taken.
 |---|---|
 | `{context.paths.docs}/bugs/triage.md` | `kiss-bug-triage` |
 | `{context.paths.docs}/bugs/change-register.md` | `kiss-change-log` |
-| `{context.paths.docs}/testing/regression-index.md` | `kiss-regression-tests` |
 | Actual source edits | `kiss-implement` |
 | Regression test files | `kiss-regression-tests` + user |
 | `{context.paths.docs}/bugs/fix-debts.md` | all three (append) |
@@ -138,7 +137,9 @@ already taken.
 
 **Writes for:**
 
-- tester → the change-register tells the tester what needs re-test
+- tester → the change-register tells the tester what needs
+  re-test; regression test code is added to the project test
+  tree for the tester to index in `regression-index.md`
 - project-manager → `change-register.extract` feeds status reports
 - code-quality-reviewer / code-security-reviewer → reviewers re-run
   against the changed files listed in the register
@@ -244,7 +245,7 @@ For each bug in the fix-now bucket:
 |-------|--------------------|
 | 1     | `triage.md` |
 | 2     | `kiss-plan` → `kiss-taskify` → `kiss-implement` per bug |
-| 3     | `kiss-regression-tests` + `regression-index.md` |
+| 3     | `kiss-regression-tests` (test code in project tree) |
 | 4     | `change-register.md` row + `BUG-NNN.md` status update |
 | 5     | `kiss-verify-tasks` |
 

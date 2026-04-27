@@ -96,14 +96,14 @@ The scripts auto-prefer a project-local `./.venv` in your current working direct
 
 ```bash
 cd /path/to/your/workspace          # where your .xlsx lives
-bash <skill-dir>/scripts/setup_env.sh
+bash <skill-dir>/scripts/bash/setup_env.sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 cd C:\path\to\your\workspace        # where your .xlsx lives
-pwsh <skill-dir>\scripts\setup_env.ps1
+pwsh <skill-dir>\scripts\powershell\setup_env.ps1
 ```
 
 The helper creates `./.venv` next to your files (not inside the skill folder) and `pip install`s `openpyxl` and `PyYAML` from `scripts/requirements.txt`. Subsequent script runs are then automatic — each script detects the venv and re-execs under it.

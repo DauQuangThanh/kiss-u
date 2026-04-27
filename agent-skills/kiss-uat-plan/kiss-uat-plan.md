@@ -54,7 +54,7 @@ decisions.
 - `.kiss/context.yml`
 - `{context.paths.specs}/<feature>/spec.md` — user stories and
   acceptance criteria
-- `{context.paths.docs}/architecture/srs.md` — FR-NNN / NFR-NNN
+- `{context.paths.docs}/analysis/srs.md` — FR-NNN / NFR-NNN
   (optional but recommended)
 - `{context.paths.docs}/testing/<feature>/strategy.md` — system
   test strategy (to ensure UAT is complementary, not redundant)
@@ -65,16 +65,16 @@ decisions.
 
 ## Outputs
 
-- `{context.paths.docs}/testing/<feature>/uat-plan.md` — the UAT
-  plan (primary artefact)
-- `{context.paths.docs}/testing/<feature>/uat-plan.extract` —
-  companion KEY=VALUE ledger
+- `{context.paths.docs}/analysis/uat-plan/<feature>/uat-plan.md` —
+  the UAT plan (primary artefact)
+- `{context.paths.docs}/analysis/uat-plan/<feature>/uat-plan.extract`
+  — companion KEY=VALUE ledger
   (UAT_REVISION, UAT_FEATURE, UAT_ENV, UAT_START_DATE, UAT_END_DATE)
-- `{context.paths.docs}/testing/<feature>/uat-sign-off.md` —
-  the sign-off ledger the business sponsor and user representatives
-  complete after UAT execution
-- `{context.paths.docs}/testing/<feature>/uat-debts.md` — open
-  items (UATDEBT-NN: …)
+- `{context.paths.docs}/analysis/uat-plan/<feature>/uat-sign-off.md`
+  — the sign-off ledger the business sponsor and user
+  representatives complete after UAT execution
+- `{context.paths.docs}/analysis/uat-plan/<feature>/uat-debts.md`
+  — open items (UATDEBT-NN: …)
 
 ## Context Update
 

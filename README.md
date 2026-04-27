@@ -178,17 +178,17 @@ In addition to the SDD slash commands, `kiss init` installs **fourteen role-base
 
 | Agent                    | Artefacts                                                            | Delegates to (selection)                                                                                                                  |
 | ------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `business-analyst`       | Spec, user stories, acceptance criteria, edge cases                  | `kiss-specify`, `kiss-clarify-specs`                                                                                                      |
+| `business-analyst`       | Spec, user stories, acceptance criteria, SRS, UAT plan, data migration plan | `kiss-specify`, `kiss-clarify-specs`, `kiss-srs`, `kiss-uat-plan`, `kiss-data-migration-plan` |
 | `architect`              | Architecture intake, technology research, ADRs, C4 diagrams          | `kiss-plan`, `kiss-standardize`, `kiss-arch-intake`, `kiss-tech-research`, `kiss-adr-author`, `kiss-c4-diagrams`                           |
 | `developer`              | Detailed design, API contract, data model, unit-test skeletons       | `kiss-plan`, `kiss-implement`, `kiss-standardize`, `kiss-dev-design`, `kiss-unit-tests`                                                   |
-| `test-architect`         | Test strategy, framework, quality gates                              | `kiss-plan`, `kiss-standardize`, `kiss-test-strategy`, `kiss-test-framework`, `kiss-quality-gates`                                        |
-| `tester`                 | Test cases, execution ledger, structured bug reports                 | `kiss-taskify`, `kiss-verify-tasks`, `kiss-test-cases`, `kiss-test-execution`, `kiss-bug-report`                                          |
+| `test-architect`         | Test strategy, framework, quality gates, RTM               | `kiss-plan`, `kiss-standardize`, `kiss-test-strategy`, `kiss-test-framework`, `kiss-quality-gates`, `kiss-traceability-matrix`          |
+| `tester`                 | Test cases, execution ledger, bug reports, regression index          | `kiss-taskify`, `kiss-verify-tasks`, `kiss-test-cases`, `kiss-test-execution`, `kiss-bug-report`, `kiss-regression-tests`                 |
 | `bug-fixer`              | Bug triage, fixes, regression tests, change log                      | `kiss-implement`, `kiss-verify-tasks`, `kiss-bug-triage`, `kiss-regression-tests`, `kiss-change-log`                                      |
 | `code-quality-reviewer`  | Maintainability review, complexity and SOLID/DRY/KISS findings       | `kiss-standardize`, `kiss-quality-review`                                                                                                 |
 | `code-security-reviewer` | OWASP Top 10 / STRIDE review, dependency audit                       | `kiss-security-review`, `kiss-dependency-audit`                                                                                           |
-| `devops`                 | CI/CD, IaC, containers, observability, deployment runbook            | `kiss-cicd-pipeline`, `kiss-infrastructure-plan`, `kiss-containerization`, `kiss-observability-plan`, `kiss-deployment-strategy`            |
+| `devops`                 | CI/CD, IaC, containers, observability, deployment runbook, ops handover, migration runbook | `kiss-cicd-pipeline`, `kiss-infrastructure-plan`, `kiss-containerization`, `kiss-observability-plan`, `kiss-deployment-strategy`, `kiss-handover`, `kiss-data-migration-plan` |
 | `product-owner`          | Backlog, acceptance criteria, roadmap, GitHub issues                 | `kiss-tasks-to-issues`, `kiss-backlog`, `kiss-acceptance-criteria`, `kiss-roadmap`                                                         |
-| `project-manager`        | Project plan, risk register, status reports, change log              | `kiss-taskify`, `kiss-feature-checklist`, `kiss-standardize`, `kiss-project-planning`, `kiss-risk-register`, `kiss-status-report`, `kiss-change-control` |
+| `project-manager`        | Project plan, WBS, risk register, phase gates, baselines, status reports, change control | `kiss-taskify`, `kiss-feature-checklist`, `kiss-standardize`, `kiss-project-planning`, `kiss-wbs-decompose`, `kiss-phase-gate`, `kiss-baseline`, `kiss-risk-register`, `kiss-status-report`, `kiss-change-control` |
 | `scrum-master`           | Sprint plan, standup log, retrospective synthesis                    | `kiss-taskify`, `kiss-feature-checklist`, `kiss-sprint-planning`, `kiss-standup`, `kiss-retrospective`                                    |
 | `technical-analyst`      | Codebase scan, extracted architecture, API docs, dependency map      | `kiss-codebase-scan`, `kiss-arch-extraction`, `kiss-api-docs`, `kiss-dependency-map`                                                      |
 | `ux-designer`            | Low-fidelity wireframes and Mermaid user flows                       | `kiss-wireframes`                                                                                                                         |
@@ -208,18 +208,19 @@ Every role writes under a **work-type directory** rather than a per-role directo
 
 | Directory                       | Example Contents                                                                                                              |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `docs/architecture/`            | `intake.md`, `c4-context.md`, `c4-container.md`, `extracted.md`, `tech-debts.md`                                              |
+| `docs/architecture/`            | `intake.md`, `srs.md`, `c4-context.md`, `c4-container.md`, `extracted.md`, `tech-debts.md`                                   |
 | `docs/decisions/`               | `ADR-NNN-<slug>.md` (one ADR per file)                                                                                        |
 | `docs/research/`                | `<topic>.md` — technology research                                                                                            |
 | `docs/design/<feature>/`        | `design.md`, `api-contract.md`, `data-model.md`                                                                               |
-| `docs/testing/<feature>/`       | `strategy.md`, `framework.md`, `quality-gates.md`, `test-cases.md`, `execution.md`, `test-debts.md`                          |
+| `docs/testing/<feature>/`       | `strategy.md`, `framework.md`, `quality-gates.md`, `test-cases.md`, `execution.md`, `test-debts.md`, `regression-index.md`           |
+| `docs/analysis/`                | `codebase-scan.md`, `api-docs.md`, `dependencies.md`, `traceability-matrix.md`, `srs.md`, `uat-plan/<feature>/uat-plan.md`, `data-migration-plan.md`, `field-mapping.md` |
 | `docs/bugs/`                    | `BUG-NNN-<slug>.md`, `triage.md`, `change-register.md`, `fix-debts.md`                                                        |
 | `docs/reviews/<feature>/`       | `quality.md`, `security.md`, `dependencies.md`, plus shared `docs/reviews/{quality,security}-debts.md`                       |
-| `docs/operations/`              | `cicd.md`, `infra.md`, `containers.md`, `monitoring.md`, `deployment.md`                                                      |
+| `docs/operations/`              | `cicd.md`, `infra.md`, `containers.md`, `monitoring.md`, `deployment.md`, `migration-runbook.md`, `handover/`  |
 | `docs/product/`                 | `backlog.md`, `acceptance.md`, `roadmap.md`                                                                                   |
-| `docs/project/`                 | `project-plan.md`, `risk-register.md`, `status-YYYY-MM-DD.md`, `change-log.md`, `pm-debts.md`                                |
+| `docs/project/`                 | `project-plan.md`, `wbs-index.md`, `risk-register.md`, `status-YYYY-MM-DD.md`, `change-log.md`, `gates/`, `pm-debts.md`      |
+| `docs/baselines/<label>/`       | `manifest.md`, `artefacts/` (frozen copies with SHA-256 hashes)                                                              |
 | `docs/agile/`                   | `sprint-NN-plan.md`, `standups/YYYY-MM-DD.md`, `retro-sprint-NN.md`                                                           |
-| `docs/analysis/`                | `codebase-scan.md`, `api-docs.md`, `dependencies.md`                                                                          |
 | `docs/ux/<feature>/`            | `wireframes.md`, `user-flows.md`                                                                                              |
 | `docs/agent-decisions/<agent>/` | Per-run decision log (auto mode)                                                                                              |
 
@@ -257,6 +258,31 @@ For enhanced quality and validation:
 | `/kiss-clarify-specs`   | `kiss-clarify-specs`    | Resolve underspecified areas. Recommended before `/kiss-plan`.                                             |
 | `/kiss-verify-tasks`    | `kiss-verify-tasks`     | Cross-artefact consistency and coverage analysis. Run after `/kiss-taskify` and before `/kiss-implement`.  |
 | `/kiss.checklist`       | `kiss-checklist`        | Generate quality checklists that validate requirements completeness, clarity, and consistency.             |
+
+### Waterfall / Large-Project Commands
+
+Additional skills for formal delivery lifecycles — Waterfall, government contracts, regulated industries, and any project that requires phase gates, traceability, or formal hand-overs.
+
+| Command                        | Agent Skill                   | Description                                                                                                     |
+| ------------------------------ | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `/kiss-srs`                    | `kiss-srs`                    | Aggregate all feature specs into an IEEE 29148:2018-aligned Software Requirements Specification (SRS).          |
+| `/kiss-traceability-matrix`    | `kiss-traceability-matrix`    | Build a Requirements Traceability Matrix (RTM) linking FR/NFR → design → tasks → tests → bugs.                 |
+| `/kiss-phase-gate`             | `kiss-phase-gate`             | Author a Waterfall phase-exit checklist and sign-off record (SRR, CDR, TRR, ORR, go-live).                     |
+| `/kiss-wbs-decompose`          | `kiss-wbs-decompose`          | Decompose the project-plan WBS into feature stub directories, bridging planning and specification.              |
+| `/kiss-baseline`               | `kiss-baseline`               | Snapshot artefacts as a named, immutable baseline with SHA-256 manifest and optional git tag.                   |
+| `/kiss-uat-plan`               | `kiss-uat-plan`               | Draft a business-workflow-level UAT plan with scenarios, entry/exit criteria, and a sponsor sign-off ledger.    |
+| `/kiss-handover`               | `kiss-handover`               | Draft the operations/support hand-over package — runbook index, L1/L2/L3 escalation matrix, training plan.     |
+| `/kiss-data-migration-plan`    | `kiss-data-migration-plan`    | Draft a data migration plan covering strategy, field mapping, ETL outline, cutover window, and rollback.        |
+
+### Document Conversion Commands
+
+Round-trip translation between Office formats and Markdown for version-control-friendly editing:
+
+| Command              | Agent Skill          | Description                                                                                          |
+| -------------------- | -------------------- | ---------------------------------------------------------------------------------------------------- |
+| `/kiss-docx-markdown` | `kiss-docx-markdown` | Convert `.docx` ↔ Markdown with high-fidelity round-trip via pandoc + sidecar metadata.             |
+| `/kiss-pptx-markdown` | `kiss-pptx-markdown` | Convert `.pptx` ↔ Markdown preserving slide structure, notes, layouts, and images.                  |
+| `/kiss-xlsx-markdown` | `kiss-xlsx-markdown` | Convert `.xlsx` ↔ Markdown preserving sheets, formulas, named ranges, and formatting via sidecar.   |
 
 ## CLI Reference
 

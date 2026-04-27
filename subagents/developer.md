@@ -139,6 +139,9 @@ already taken.
 - tester → design + API contract + unit-tests-index are the
   skeleton the tester writes against
 - test-architect → design informs test strategy + framework
+- technical-analyst → developer authors the authoritative API
+  contract for new endpoints; technical-analyst validates it
+  matches the implementation
 - devops → API contract + data-model shape deployment and infra
 - code-quality-reviewer → enforces the project standards this
   agent sets

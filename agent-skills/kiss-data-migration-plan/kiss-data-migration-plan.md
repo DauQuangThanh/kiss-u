@@ -60,7 +60,7 @@ decisions.
 ## Inputs
 
 - `.kiss/context.yml`
-- `{context.paths.docs}/architecture/srs.md` — data entities,
+- `{context.paths.docs}/analysis/srs.md` — data entities,
   volumes, retention rules (FR-NNN / NFR-NNN related to data)
 - `{context.paths.docs}/architecture/intake.md` — legacy system
   description, technology stack
@@ -71,17 +71,19 @@ decisions.
 
 ## Outputs
 
-- `{context.paths.docs}/operations/data-migration-plan.md` — the
-  migration plan (primary artefact)
-- `{context.paths.docs}/operations/field-mapping.md` — source-to-
-  target field mapping table
+- `{context.paths.docs}/analysis/data-migration-plan.md` — the
+  migration strategy and scope (primary artefact; owned by
+  business-analyst)
+- `{context.paths.docs}/analysis/field-mapping.md` — source-to-
+  target field mapping table (business logic; owned by
+  business-analyst)
 - `{context.paths.docs}/operations/migration-runbook.md` — step-by-
-  step cutover runbook
-- `{context.paths.docs}/operations/data-migration-plan.extract` —
+  step cutover runbook (technical execution; owned by DevOps)
+- `{context.paths.docs}/analysis/data-migration-plan.extract` —
   companion KEY=VALUE ledger
   (DM_STRATEGY, DM_CUTOVER_WINDOW, DM_ROLLBACK_TRIGGER,
    DM_RECORD_VOLUME, DM_VALIDATION_APPROACH)
-- `{context.paths.docs}/operations/dm-debts.md` — open items
+- `{context.paths.docs}/analysis/dm-debts.md` — open items
   (DMDEBT-NN: …)
 
 ## Context Update

@@ -65,12 +65,12 @@ decisions to the parent agent's decision log.
 
 ## Outputs
 
-- `{context.paths.docs}/architecture/srs.md` — the consolidated SRS
+- `{context.paths.docs}/analysis/srs.md` — the consolidated SRS
   (primary artefact)
-- `{context.paths.docs}/architecture/srs.extract` — companion
+- `{context.paths.docs}/analysis/srs.extract` — companion
   KEY=VALUE ledger consumed by downstream skills
   (SRS_REVISION, LAST_FR_ID, LAST_NFR_ID, BASELINE_DATE)
-- `{context.paths.docs}/architecture/srs-debts.md` — open items
+- `{context.paths.docs}/analysis/srs-debts.md` — open items
   the project team must resolve before the SRS is baselined
   (SRSDEBT-NN: …)
 

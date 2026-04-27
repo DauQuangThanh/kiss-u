@@ -51,10 +51,10 @@ decisions to the parent agent's decision log.
 ## Inputs
 
 - `.kiss/context.yml`
-- `{context.paths.docs}/architecture/srs.md` — FR-NNN / NFR-NNN
+- `{context.paths.docs}/analysis/srs.md` — FR-NNN / NFR-NNN
   identifiers (required; if absent, prompt user to run
   `/kiss.srs` first)
-- `{context.paths.docs}/architecture/srs.extract` — ID counters
+- `{context.paths.docs}/analysis/srs.extract` — ID counters
 - `{context.paths.docs}/design/**/*.md` — design sections
 - `{context.paths.tasks}/**/tasks.md` — task IDs (TASK-NNN)
 - `{context.paths.docs}/testing/**/test-cases.md` — test case IDs
