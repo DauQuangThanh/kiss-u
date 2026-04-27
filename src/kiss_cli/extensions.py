@@ -41,6 +41,15 @@ _FALLBACK_CORE_COMMAND_NAMES = frozenset({
     "risk-register",
     "status-report",
     "change-control",
+    # Waterfall lifecycle
+    "wbs-decompose",
+    "srs",
+    "traceability-matrix",
+    "baseline",
+    "phase-gate",
+    "uat-plan",
+    "data-migration-plan",
+    "handover",
     # Product-owner
     "backlog",
     "acceptance-criteria",
@@ -87,6 +96,12 @@ _FALLBACK_CORE_COMMAND_NAMES = frozenset({
     "dependency-map",
     # UX
     "wireframes",
+    "vue-spa-mockup",
+    "react-spa-mockup",
+    # Office round-trip
+    "docx-markdown",
+    "pptx-markdown",
+    "xlsx-markdown",
 })
 EXTENSION_COMMAND_NAME_PATTERN = re.compile(r"^kiss\.([a-z0-9-]+)\.([a-z0-9-]+)$")
 # Hook phase names must follow the pattern: before|after + underscore + kiss- + skill-name

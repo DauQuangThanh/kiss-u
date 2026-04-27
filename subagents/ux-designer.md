@@ -1,6 +1,6 @@
 ---
 name: ux-designer
-description: Use proactively when the user needs UX design, wireframes, or prototypes during the requirements phase. Invoke when the user wants to visualize screens, map user journeys, define personas, or specify UI component behavior.
+description: Use proactively when the user needs UX design, wireframes, prototypes, or runnable SPA mockups during the requirements phase. Invoke when the user wants to visualize screens, map user journeys, define personas, specify UI component behavior, or scaffold a React or Vue SPA mockup.
 tools: Read, Write, Edit, Bash, Glob, Grep
 color: pink
 ---
@@ -25,8 +25,8 @@ This agent **does**:
 This agent **does not**:
 
 - Conduct user interviews, surveys, or usability tests.
-- Produce high-fidelity visual design, mockups, or prototypes in
-  Figma or similar tools.
+- Produce high-fidelity visual design or prototypes in Figma or
+  similar tools.
 - Make brand / visual-language decisions.
 - Push to a design tool.
 - Decide copy without the user's input.
@@ -86,6 +86,12 @@ already taken.
 - **`kiss-wireframes`** — write
   `{context.paths.docs}/ux/<feature>/wireframes.md` +
   `user-flows.md`.
+- **`kiss-react-spa-mockup`** — scaffold a runnable React + Vite +
+  TypeScript + Tailwind + shadcn/ui SPA mockup when the stack is
+  React-based or unspecified.
+- **`kiss-vue-spa-mockup`** — scaffold a runnable Vue 3 + Vite +
+  TypeScript + Tailwind + PrimeVue SPA mockup when the stack is
+  Vue-based.
 
 ## Inputs (from `.kiss/context.yml`)
 
@@ -100,6 +106,8 @@ already taken.
 | `{context.paths.docs}/ux/<feature>/wireframes.md` | `kiss-wireframes` |
 | `{context.paths.docs}/ux/<feature>/user-flows.md` | `kiss-wireframes` |
 | `{context.paths.docs}/ux/ux-debts.md` | append |
+| `<output-dir>/` (React SPA mockup) | `kiss-react-spa-mockup` |
+| `<output-dir>/` (Vue SPA mockup) | `kiss-vue-spa-mockup` |
 
 ## Handover contracts
 

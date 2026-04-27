@@ -92,7 +92,7 @@ flowchart LR
 |-------|------|-----------------|
 | `business-analyst` | Requirements | `/kiss-specify` `/kiss-clarify-specs` `/kiss-srs` `/kiss-uat-plan` `/kiss-data-migration-plan` |
 | `product-owner` | Requirements | `/kiss-backlog` `/kiss-acceptance-criteria` `/kiss-roadmap` `/kiss-tasks-to-issues` |
-| `ux-designer` | Requirements | `/kiss-wireframes` |
+| `ux-designer` | Requirements | `/kiss-wireframes` `/kiss-react-spa-mockup` `/kiss-vue-spa-mockup` |
 | `architect` | Architecture | `/kiss-arch-intake` `/kiss-tech-research` `/kiss-adr-author` `/kiss-c4-diagrams` |
 | `developer` | Design & Build | `/kiss-dev-design` `/kiss-plan` `/kiss-implement` `/kiss-unit-tests` |
 | `project-manager` | Planning | `/kiss-project-planning` `/kiss-wbs-decompose` `/kiss-phase-gate` `/kiss-baseline` `/kiss-risk-register` `/kiss-status-report` `/kiss-change-control` |
@@ -116,7 +116,7 @@ flowchart TD
     subgraph P1["Phase 1 — Discovery & Requirements"]
         PO["**product-owner**\n/kiss-backlog\n/kiss-acceptance-criteria\n/kiss-roadmap"]
         BA["**business-analyst**\n/kiss-specify\n/kiss-clarify-specs"]
-        UX["**ux-designer**\n/kiss-wireframes"]
+        UX["**ux-designer**\n/kiss-wireframes\n/kiss-react-spa-mockup\n/kiss-vue-spa-mockup"]
     end
 
     subgraph P2["Phase 2 — Architecture"]
@@ -210,7 +210,7 @@ flowchart TD
     subgraph SRR["Phase 1 — Requirements  ➜  SRR gate"]
         BA1["**business-analyst**\n/kiss-specify\n/kiss-srs\n/kiss-data-migration-plan"]
         PO1["**product-owner**\n/kiss-backlog\n/kiss-acceptance-criteria"]
-        UX1["**ux-designer**\n/kiss-wireframes"]
+        UX1["**ux-designer**\n/kiss-wireframes\n/kiss-react-spa-mockup\n/kiss-vue-spa-mockup"]
         PM_SRR["**project-manager**\n/kiss-phase-gate  SRR\n/kiss-baseline  requirements"]
     end
 
@@ -513,9 +513,10 @@ project-manager → plan constraints
 
 ### ux-designer
 
-Produces text-based wireframes and Mermaid user-flow diagrams.
+Produces text-based wireframes, Mermaid user-flow diagrams, and runnable
+SPA mockups.
 
-**Commands**: `/kiss-wireframes`
+**Commands**: `/kiss-wireframes` · `/kiss-react-spa-mockup` · `/kiss-vue-spa-mockup`
 
 **Reads from**: business-analyst → spec · product-owner → acceptance criteria
 
@@ -524,6 +525,8 @@ Produces text-based wireframes and Mermaid user-flow diagrams.
 | Wireframes | `docs/ux/<feature>/wireframes.md` |
 | User flows | `docs/ux/<feature>/user-flows.md` |
 | UX debts | `docs/ux/ux-debts.md` |
+| React SPA mockup | `<output-dir>/` (runnable app) |
+| Vue SPA mockup | `<output-dir>/` (runnable app) |
 
 ---
 
