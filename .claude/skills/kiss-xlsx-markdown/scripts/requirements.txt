@@ -1,0 +1,4 @@
+# Runtime dependencies for kiss-xlsx-markdown.
+# Install into a project-local venv via setup_env.sh / setup_env.ps1.
+openpyxl>=3.1.0
+PyYAML>=6.0

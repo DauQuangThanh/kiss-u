@@ -1,0 +1,6 @@
+# Runtime dependencies for kiss-docx-markdown.
+# Install into a project-local venv via setup_env.sh / setup_env.ps1.
+# Note: pandoc is a separate system dependency, not pip-installable.
+python-docx>=0.8.11
+lxml>=4.9.0
+PyYAML>=6.0

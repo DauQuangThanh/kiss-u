@@ -1,0 +1,4 @@
+# Runtime dependencies for kiss-pptx-markdown.
+# Install into a project-local venv via setup_env.sh / setup_env.ps1.
+python-pptx>=0.6.21
+PyYAML>=6.0
