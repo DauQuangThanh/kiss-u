@@ -1,5 +1,5 @@
 <div align="center">
-    <h1>KISS</h1>
+    <h1>KISS-U</h1>
     <h3><em>Drive Quality Together with Reusable AI Components.</em></h3>
 </div>
 
