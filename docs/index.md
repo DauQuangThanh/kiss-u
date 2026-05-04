@@ -1,12 +1,12 @@
-# KISS
+# KISS-U
 
-*Build high-quality software faster.*
+*Drive Quality Together with Reusable AI Components.*
 
 **An effort to allow organizations to focus on product scenarios rather than writing undifferentiated code with the help of Spec-Driven Development.**
 
 ## What is Spec-Driven Development?
 
-Spec-Driven Development **flips the script** on traditional software development. For decades, code has been king — specifications were just scaffolding we built and discarded once the "real work" of coding began. Spec-Driven Development changes this: **specifications become executable**, directly generating working implementations rather than just guiding them.
+Spec-Driven Development (SDD) is a simple idea: write down what you want to build before you build it, and keep that document at the centre of the work. Most teams write a spec, then ignore it as soon as they start coding. SDD does the opposite. The spec is the source of truth. Your AI agent reads it to plan the work, breaks it into tasks, and writes the code to match. When something needs to change, you change the spec first. You stay in charge of the what and the why. The agent handles most of the how.
 
 ## Getting Started
 
