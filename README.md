@@ -45,7 +45,7 @@
 
 ## Overview
 
-KISS is a command-line installer that bootstraps projects for the full software development lifecycle. A single `kiss init` provisions fifty-plus role-specific AI skills, fourteen role-based custom agents, and a deep customization layer of extensions, presets, and workflows into your project.
+KISS-U is a command-line installer that bootstraps projects for the full software development lifecycle. A single `kiss init` provisions fifty-plus role-specific AI skills, fourteen role-based custom agents, and a deep customization layer of extensions, presets, and workflows into your project.
 
 The platform covers every delivery phase — requirements gathering, architecture and design, implementation, testing, code review, security review, operations, project management, and formal Waterfall deliverables — across both Agile and hybrid methodologies. It runs offline once installed, integrates with seven AI coding agents across CLI and IDE environments, and works consistently on macOS, Linux, and Windows.
 
@@ -61,7 +61,7 @@ You stay in charge of the *what* and the *why*. The agent handles most of the *h
 
 ## Getting Started
 
-### 1. Install KISS
+### 1. Install KISS-U
 
 > **Important:** The only official, maintained KISS packages are published from this GitHub repository. Packages of the same name on PyPI are **not** affiliated with this project. Always install directly from GitHub.
 
@@ -453,7 +453,7 @@ The example below builds **Bookshelf**, a single-user reading tracker, from a bl
 # Create a new project, with interactive multi-select for integrations
 kiss init bookshelf
 
-# Or initialize KISS in the current repository
+# Or initialize KISS-U in the current repository
 kiss init .
 kiss init --here --force      # merge into a non-empty directory
 
@@ -467,13 +467,11 @@ kiss init bookshelf --integration generic --integration-options="--commands-dir 
 kiss init bookshelf --integration claude --ignore-agent-tools
 ```
 
-![KISS bootstrapping a new project in the terminal](./media/frwk.png)
+![KISS-U bootstrapping a new project in the terminal](./media/frwk.png)
 
 ### Step 1: Establish Project Principles
 
 Launch your AI agent (for example, `claude`) inside the project directory.
-
-![Bootstrapping the Claude Code environment](./media/bootstrap-claude-code.gif)
 
 Setup is correct when `/kiss-standardize`, `/kiss-specify`, `/kiss-plan`, `/kiss-taskify`, and `/kiss-implement` are listed.
 
@@ -658,4 +656,4 @@ To report issues, request features, or ask questions about Spec-Driven Developme
 
 ## License
 
-KISS is released under the MIT License. See the [LICENSE](./LICENSE) file for full terms.
+KISS-U is released under the MIT License. See the [LICENSE](./LICENSE) file for full terms.
